@@ -1,0 +1,60 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+site/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# ---- Virtual envs ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---- Environment / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Local models / HF cache ----
+models/
+.huggingface/
+cache/
+.hf_cache/
+# Optional: if you use global cache mounted inside project
+# .cache/
+
+# ---- ChromaDB local persistence ----
+chroma_db/**
+!chroma_db/.gitkeep
+
+# ---- Application runtime state ----
+*.sqlite3
+*.db
+*.log
+*.pid
+
+# ---- Optional data inputs (uncomment if PDFs are private) ----
+# data/**
+# !data/.gitkeep
+
