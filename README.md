@@ -1,6 +1,6 @@
 # RAG para documentos universitarios
 
-Sistema RAG en Python usando LlamaIndex y ChromaDB.
+API en **FastAPI** + **LlamaIndex** + **ChromaDB** para consultar documentos universitarios. El LLM es **Google Gemini**; los embeddings se calculan con la **API de NVIDIA** (modelo configurable, por defecto `baai/bge-m3`).
 
 ## Estructura del proyecto
 
@@ -28,69 +28,126 @@ chatbot-facultad/
 └── requirements.txt
 ```
 
+---
+
 ## Requisitos
 
-- Python 3.10+
-- Clave de Google AI Studio (`GEMINI_API_KEY`)
-- Embeddings locales con HuggingFace (`models/multilingual-e5-large` por defecto)
+- **Python 3.10+**
+- Cuenta en [Google AI Studio](https://aistudio.google.com/) → `GEMINI_API_KEY`
+- Cuenta en [NVIDIA Build](https://build.nvidia.com/) → `NVIDIA_API_KEY`
 
-Instalación (desde `requirements.txt`):
+---
+
+## Instalación
 
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate   
+source .venv/Scripts/activate  
 pip install -r requirements.txt
 ```
 
-## Configuración
+---
 
-1. Crea un archivo `.env` en la raíz del proyecto.
-2. Define la variable obligatoria:
+## Variables de entorno (`.env`)
 
-```env
-GEMINI_API_KEY=tu_api_key
-```
+Crea `.env` en la raíz del proyecto.
 
-3. Opcional: cambia el modelo local de embeddings (por defecto se usa `models/multilingual-e5-large`):
+### Obligatorias
 
 ```env
-LOCAL_EMBED_MODEL=models/multilingual-e5-large
+GEMINI_API_KEY=tu_clave_de_google_ai_studio
+NVIDIA_API_KEY=tu_clave_de_build_nvidia_com
 ```
+
+### Opcionales
+
+| Variable | Descripción | Valor por defecto |
+|----------|-------------|-------------------|
+| `EMBED_MODEL` | Modelo de embeddings en el catálogo NVIDIA | `baai/bge-m3` |
+| `EMBED_BATCH_SIZE` | Textos por request (máx. 259 en la API NVIDIA) | `32` |
+
+Ejemplo para otro modelo del catálogo:
+
+```env
+EMBED_MODEL=nvidia/nv-embedqa-e5-v5
+```
+
+> Si se cambia el modelo de embeddings, **borrar la carpeta `chroma_db/`** y volver a ejecutar `/ingest` (las dimensiones del vector cambian).
 
 ## Uso
 
-### 1) Iniciar API
+### 1. Colocar PDFs
+
+Copiar los documentos en `data/` con extensión `.pdf`.
+
+### 2. Arrancar la API
 
 ```bash
 uvicorn api.main:app --reload
 ```
 
-### 2) Ingestar documentos (PDFs en `data/`)
+
+### 3. Ingesta
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ingest
 ```
 
-La ingesta es incremental: solo reindexa PDFs nuevos/actualizados y limpia del indice los archivos eliminados de `data/`.
 
-### 3) Consultar por chat con memoria por sesión
+### 4. Chat (con memoria por sesión)
+
+Mismo `session_id` en varias llamadas = misma conversación.
+
+**Git Bash / macOS / Linux:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/chat \
   -H "Content-Type: application/json" \
-  -d "{\"session_id\":\"alumno-1\",\"message\":\"¿Cuántos créditos necesito para titularme?\"}"
+  -d '{
+    "session_id": "alumno-1",
+    "message": "¿Qué título otorga la carrera de Ingeniería en Inteligencia Artificial?",
+  }'
 ```
+
+Campos del cuerpo:
+
+| Campo | Obligatorio | Descripción |
+|-------|-------------|-------------|
+| `session_id` | Sí | Identificador de conversación |
+| `message` | Sí | Pregunta del usuario |
+| `similarity_top_k` | No (default 5) | Cuántos chunks recuperar antes de generar |
+
+---
 
 ## Endpoints
 
-- `GET /health`: estado del servicio.
-- `POST /ingest`: ingesta incremental de PDFs en `data/`.
-- `POST /chat`: responde preguntas con RAG y devuelve fuentes.
-- `GET /swagger`: documentacion Swagger UI.
-- `GET /redoc`: documentacion alternativa ReDoc.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/health` | Estado del servicio |
+| `POST` | `/ingest` | Lee `data/*.pdf`, pipeline, upsert en Chroma |
+| `POST` | `/chat` | RAG conversacional + lista de fuentes |
+| `GET` | `/swagger` | Swagger UI |
+| `GET` | `/redoc` | ReDoc |
+| `GET` | `/openapi.json` | Esquema OpenAPI |
+
+---
+
+## Parámetros relevantes (`config.py`)
+
+| Constante | Valor por defecto | Nota |
+|-----------|------------------|------|
+| `CHUNK_SIZE` | `512` | Alineado con modelos que truncan ~512 tokens |
+| `CHUNK_OVERLAP` | `64` | Solape entre chunks |
+| `LLM_MODEL` | `gemini-2.5-flash` | Nombre de modelo para la API de Google GenAI |
+| `DEFAULT_EMBED_MODEL` | `baai/bge-m3` | Multilingüe; configurable con `EMBED_MODEL` |
+| `CHROMA_COLLECTION` | `faculty_docs` | Nombre de la colección en Chroma |
+
+---
 
 ## Comportamiento del asistente
 
-- Responde solo con información de los documentos indexados.
-- Debe citar fuentes en formato como: `Según el archivo X, página Y...`.
-- Si no encuentra evidencia en el contexto recuperado, debe responder: `No tengo esa información en los reglamentos`.
+Definido en `generation/prompt.py`:
+
+- Responde solo con información **recuperada** de los documentos indexados.
+- Debe citar fuentes, por ejemplo: *Según el archivo X, página Y…*
+- Si la respuesta no está en el contexto recuperado, debe responder exactamente: **"No tengo esa información en los documentos."**

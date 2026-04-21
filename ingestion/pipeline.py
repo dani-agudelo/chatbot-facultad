@@ -2,89 +2,97 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+import logging
+import time
+from threading import Lock
 
+from llama_index.core import Settings
+from llama_index.core.ingestion import IngestionCache, IngestionPipeline
+from llama_index.core.ingestion.pipeline import DocstoreStrategy
 from llama_index.core.schema import BaseNode, Document
+from llama_index.core.storage.docstore import SimpleDocumentStore
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
-from config import DATA_DIR, INGESTION_STATE_FILE
-from ingestion.loader import (
-    compute_file_sha256,
-    list_pdf_files,
-    load_pdf_documents,
-    load_pdf_documents_from_paths,
-)
-from ingestion.node_parsers import parse_documents_into_nodes
+from config import DOCSTORE_PATH
+from ingestion.loader import load_pdf_documents
+from ingestion.node_parsers import get_sentence_splitter
 
+logger = logging.getLogger(__name__)
 
-def load_ingestion_state(state_file: Path = INGESTION_STATE_FILE) -> dict[str, str]:
-    """Carga el estado de hashes procesados de ingesta.
-
-    Args:
-        state_file: Ruta al archivo JSON de estado.
-
-    Returns:
-        dict[str, str]: Mapa de nombre de archivo a hash SHA-256.
-    """
-    if not state_file.exists():
-        return {}
-    with state_file.open("r", encoding="utf-8") as file_obj:
-        data = json.load(file_obj)
-    return {str(key): str(value) for key, value in data.items()}
+_INGESTION_CACHE: IngestionCache | None = None
+_INGESTION_CACHE_LOCK = Lock()
+_DOCSTORE: SimpleDocumentStore | None = None
+_DOCSTORE_LOCK = Lock()
 
 
-def save_ingestion_state(
-    state: dict[str, str],
-    state_file: Path = INGESTION_STATE_FILE,
-) -> None:
-    """Guarda el estado de hashes de ingesta.
-
-    Args:
-        state: Mapa de nombre de archivo a hash SHA-256.
-        state_file: Ruta al archivo JSON de estado.
-    """
-    state_file.parent.mkdir(parents=True, exist_ok=True)
-    with state_file.open("w", encoding="utf-8") as file_obj:
-        json.dump(state, file_obj, ensure_ascii=True, indent=2)
-
-
-def compute_current_file_hashes(data_dir: Path = DATA_DIR) -> dict[str, str]:
-    """Construye el mapa de hashes SHA-256 de todos los PDFs actuales.
-
-    Args:
-        data_dir: Directorio con PDFs de origen.
+def get_ingestion_cache() -> IngestionCache:
+    """ Devuelve un cache de ingesta singleton para este proceso.
 
     Returns:
-        dict[str, str]: Mapa de nombre de archivo a hash SHA-256.
+        IngestionCache: Cache compartido utilizado por la pipeline de ingesta.
     """
-    file_hashes: dict[str, str] = {}
-    for file_path in list_pdf_files(data_dir=data_dir):
-        file_hashes[file_path.name] = compute_file_sha256(file_path)
-    return file_hashes
+    global _INGESTION_CACHE
+    with _INGESTION_CACHE_LOCK:
+        if _INGESTION_CACHE is None:
+            _INGESTION_CACHE = IngestionCache()
+    return _INGESTION_CACHE
 
 
-def get_incremental_file_changes(
-    previous_hashes: dict[str, str],
-    current_hashes: dict[str, str],
-    data_dir: Path = DATA_DIR,
-) -> tuple[list[Path], list[str], dict[str, str]]:
-    """Determina archivos nuevos/actualizados y eliminados.
+def get_docstore() -> SimpleDocumentStore:
+    """Return a process singleton document store with disk persistence."""
+    global _DOCSTORE
+    with _DOCSTORE_LOCK:
+        if _DOCSTORE is None:
+            if DOCSTORE_PATH.exists():
+                _DOCSTORE = SimpleDocumentStore.from_persist_path(str(DOCSTORE_PATH))
+            else:
+                _DOCSTORE = SimpleDocumentStore()
+    return _DOCSTORE
+
+
+def run_ingestion_pipeline(
+    documents: list[Document],
+    vector_store: BasePydanticVectorStore | None = None,
+) -> list[BaseNode]:
+    """Ejecuta la pipeline de ingesta con caching para parsing y embeddings.
 
     Args:
-        previous_hashes: Hashes guardados de la ingesta anterior.
-        current_hashes: Hashes calculados sobre el estado actual de `data/`.
-        data_dir: Directorio con PDFs de origen.
+        documents: Documentos de origen a transformar.
 
     Returns:
-        tuple[list[Path], list[str], dict[str, str]]: Rutas a reindexar, archivos removidos y nuevo estado.
+        list[BaseNode]: Nodos transformados listos para indexar.
     """
-    changed_paths: list[Path] = []
-    for file_name, file_hash in current_hashes.items():
-        if previous_hashes.get(file_name) != file_hash:
-            changed_paths.append(data_dir / file_name)
+    pipeline = IngestionPipeline(
+        transformations=[
+            get_sentence_splitter(),
+            Settings.embed_model,
+        ],
+        cache=get_ingestion_cache(),
+        docstore=get_docstore(),
+        docstore_strategy=DocstoreStrategy.UPSERTS_AND_DELETE,
+        vector_store=vector_store,
+    )
 
-    removed_files = [file_name for file_name in previous_hashes if file_name not in current_hashes]
-    return changed_paths, removed_files, current_hashes
+    started = time.perf_counter()
+    logger.info(
+        "event=pipeline_start documents=%s batch_size=%s",
+        len(documents),
+        getattr(Settings.embed_model, "embed_batch_size", "?"),
+    )
+    nodes = pipeline.run(documents=documents, show_progress=True)
+    elapsed = time.perf_counter() - started
+
+    persist_started = time.perf_counter()
+    get_docstore().persist(str(DOCSTORE_PATH))
+    persist_elapsed = time.perf_counter() - persist_started
+
+    logger.info(
+        "event=pipeline_complete nodes=%s elapsed_seconds=%.2f persist_seconds=%.3f",
+        len(nodes),
+        elapsed,
+        persist_elapsed,
+    )
+    return nodes
 
 
 def enrich_node_metadata(
@@ -121,42 +129,19 @@ def enrich_node_metadata(
 
         node.metadata["file_name"] = str(file_name)
         node.metadata["page_label"] = str(page_label)
-        if source_document:
-            node.metadata["file_hash"] = str(source_document.metadata.get("file_hash", ""))
 
     return nodes
 
 
-def load_and_prepare_nodes() -> tuple[list[Document], list[BaseNode]]:
+def load_and_prepare_nodes(
+    vector_store: BasePydanticVectorStore | None = None,
+) -> tuple[list[Document], list[BaseNode]]:
     """Carga los documentos PDF de origen y los convierte en nodos.
 
     Returns:
         tuple[list[Document], list[BaseNode]]: Documentos cargados y nodos con metadatos.
     """
     documents = load_pdf_documents()
-    nodes = parse_documents_into_nodes(documents)
-    enriched_nodes = enrich_node_metadata(nodes, documents)
-    return documents, enriched_nodes
-
-
-def load_and_prepare_incremental_nodes(
-    changed_paths: list[Path],
-    current_hashes: dict[str, str],
-) -> tuple[list[Document], list[BaseNode]]:
-    """Carga y prepara nodos solo para archivos nuevos/actualizados.
-
-    Args:
-        changed_paths: Rutas de PDFs nuevos o modificados.
-        current_hashes: Mapa actual de hashes por archivo.
-
-    Returns:
-        tuple[list[Document], list[BaseNode]]: Documentos y nodos listos para indexar.
-    """
-    documents = load_pdf_documents_from_paths(changed_paths)
-    for document in documents:
-        file_name = str(document.metadata.get("file_name", ""))
-        document.metadata["file_hash"] = current_hashes.get(file_name, "")
-
-    nodes = parse_documents_into_nodes(documents)
+    nodes = run_ingestion_pipeline(documents, vector_store=vector_store)
     enriched_nodes = enrich_node_metadata(nodes, documents)
     return documents, enriched_nodes

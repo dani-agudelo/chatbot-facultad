@@ -10,8 +10,6 @@ class IngestResponse(BaseModel):
 
     indexed_documents: int
     indexed_nodes: int
-    removed_documents: int
-    skipped_documents: int
     total_documents: int
     collection_name: str
 

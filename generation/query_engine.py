@@ -6,9 +6,7 @@ from llama_index.core import Settings
 from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.memory import ChatMemoryBuffer
 
-from config import configure_settings
 from generation.prompt import SYSTEM_PROMPT
-from retrieval.postprocessor import get_similarity_postprocessor
 from retrieval.retriever import build_retriever
 from storage.index_store import get_or_create_index
 
@@ -42,7 +40,6 @@ def get_chat_engine(
     Returns:
         CondensePlusContextChatEngine: Instancia de chat engine configurada.
     """
-    configure_settings()
     index = get_or_create_index()
     retriever = build_retriever(index=index, similarity_top_k=similarity_top_k)
     memory = get_session_memory(session_id=session_id)
@@ -52,5 +49,4 @@ def get_chat_engine(
         llm=Settings.llm,
         memory=memory,
         system_prompt=SYSTEM_PROMPT,
-        node_postprocessors=[get_similarity_postprocessor()],
     )

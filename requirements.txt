@@ -1,8 +1,9 @@
 llama-index
 llama-index-llms-google-genai
-llama-index-embeddings-huggingface
+llama-index-embeddings-nvidia
 llama-index-vector-stores-chroma
-sentence-transformers
+llama-index-readers-file
+pypdf
 chromadb
 fastapi
 uvicorn
