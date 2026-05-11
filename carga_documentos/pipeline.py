@@ -1,4 +1,4 @@
-"""Funciones de pipeline de ingestion"""
+"""Pipeline de carga de documentos: fragmentacion, embeddings y docstore."""
 
 from __future__ import annotations
 
@@ -13,29 +13,29 @@ from llama_index.core.schema import BaseNode, Document
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
+from carga_documentos.loader import load_pdf_documents
+from carga_documentos.node_parsers import get_sentence_splitter
 from config import DOCSTORE_PATH
-from ingestion.loader import load_pdf_documents
-from ingestion.node_parsers import get_sentence_splitter
 
 logger = logging.getLogger(__name__)
 
-_INGESTION_CACHE: IngestionCache | None = None
-_INGESTION_CACHE_LOCK = Lock()
+_CACHE_PIPELINE: IngestionCache | None = None
+_CACHE_PIPELINE_LOCK = Lock()
 _DOCSTORE: SimpleDocumentStore | None = None
 _DOCSTORE_LOCK = Lock()
 
 
-def get_ingestion_cache() -> IngestionCache:
-    """ Devuelve un cache de ingesta singleton para este proceso.
+def obtener_cache_pipeline_documentos() -> IngestionCache:
+    """Devuelve un cache de pipeline singleton para este proceso.
 
     Returns:
-        IngestionCache: Cache compartido utilizado por la pipeline de ingesta.
+        IngestionCache: Cache compartido utilizado por la pipeline de LlamaIndex.
     """
-    global _INGESTION_CACHE
-    with _INGESTION_CACHE_LOCK:
-        if _INGESTION_CACHE is None:
-            _INGESTION_CACHE = IngestionCache()
-    return _INGESTION_CACHE
+    global _CACHE_PIPELINE
+    with _CACHE_PIPELINE_LOCK:
+        if _CACHE_PIPELINE is None:
+            _CACHE_PIPELINE = IngestionCache()
+    return _CACHE_PIPELINE
 
 
 def get_docstore() -> SimpleDocumentStore:
@@ -50,11 +50,11 @@ def get_docstore() -> SimpleDocumentStore:
     return _DOCSTORE
 
 
-def run_ingestion_pipeline(
+def ejecutar_pipeline_carga_documentos(
     documents: list[Document],
     vector_store: BasePydanticVectorStore | None = None,
 ) -> list[BaseNode]:
-    """Ejecuta la pipeline de ingesta con caching para parsing y embeddings.
+    """Ejecuta la pipeline de LlamaIndex con caching para parsing y embeddings.
 
     Args:
         documents: Documentos de origen a transformar.
@@ -67,7 +67,7 @@ def run_ingestion_pipeline(
             get_sentence_splitter(),
             Settings.embed_model,
         ],
-        cache=get_ingestion_cache(),
+        cache=obtener_cache_pipeline_documentos(),
         docstore=get_docstore(),
         docstore_strategy=DocstoreStrategy.UPSERTS_AND_DELETE,
         vector_store=vector_store,
@@ -142,6 +142,6 @@ def load_and_prepare_nodes(
         tuple[list[Document], list[BaseNode]]: Documentos cargados y nodos con metadatos.
     """
     documents = load_pdf_documents()
-    nodes = run_ingestion_pipeline(documents, vector_store=vector_store)
+    nodes = ejecutar_pipeline_carga_documentos(documents, vector_store=vector_store)
     enriched_nodes = enrich_node_metadata(nodes, documents)
     return documents, enriched_nodes

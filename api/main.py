@@ -1,4 +1,4 @@
-"""Punto de entrada FastAPI para endpoints de ingestion y chat."""
+"""Punto de entrada FastAPI para carga de documentos y chat."""
 
 from __future__ import annotations
 
@@ -12,9 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.schemas import ChatRequest, ChatResponse, IngestResponse
 from config import CHROMA_COLLECTION, configure_settings
 from generation.query_engine import get_chat_engine
-from ingestion.pipeline import (
-    load_and_prepare_nodes,
-)
+from carga_documentos.pipeline import load_and_prepare_nodes
 from retrieval.postprocessor import extract_source_metadata
 from storage.index_store import get_vector_store
 
@@ -26,7 +24,7 @@ OPENAPI_TAGS = [
         "description": "Estado de la API",
     },
     {
-        "name": "ingestion",
+        "name": "carga_documentos",
         "description": "Carga e indexacion de documentos en ChromaDB.",
     },
     {
@@ -76,15 +74,15 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/ingest", response_model=IngestResponse, tags=["ingestion"])
+@app.post("/ingest", response_model=IngestResponse, tags=["carga_documentos"])
 def ingest_documents() -> IngestResponse:
-    """Ingesta documentos usando IngestionPipeline + IngestionCache.
+    """Carga e indexa documentos usando IngestionPipeline + IngestionCache.
 
     Returns:
-        IngestResponse: Metricas de ingestion para documentos e indices.
+        IngestResponse: Metricas de carga e indexacion para documentos e indices.
 
     Raises:
-        HTTPException: Si la ingestion falla o no hay documentos disponibles.
+        HTTPException: Si la carga o indexacion falla o no hay documentos disponibles.
     """
     ingest_started = time.perf_counter()
     try:

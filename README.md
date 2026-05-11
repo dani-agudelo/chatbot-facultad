@@ -12,7 +12,7 @@ chatbot-facultad/
 ├── generation/
 │   ├── prompt.py
 │   └── query_engine.py
-├── ingestion/
+├── carga_documentos/
 │   ├── loader.py
 │   ├── node_parsers.py
 │   └── pipeline.py

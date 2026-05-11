@@ -59,6 +59,6 @@ def reset_collection(collection_name: str = CHROMA_COLLECTION) -> Collection:
     try:
         client.delete_collection(name=collection_name)
     except Exception:
-        # La coleccion puede estar ausente en la primera ingestion.
+        # La coleccion puede estar ausente en la primera carga al indice.
         pass
     return client.get_or_create_collection(name=collection_name)

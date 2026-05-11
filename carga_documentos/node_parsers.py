@@ -11,7 +11,7 @@ from config import CHUNK_OVERLAP, CHUNK_SIZE
 
 
 def get_sentence_splitter() -> SentenceSplitter:
-    """Crea el splitter de oraciones utilizado durante la ingestion.
+    """Crea el splitter de oraciones utilizado al fragmentar documentos.
 
     Returns:
         SentenceSplitter: Splitter configurado con configuraciones fijas de chunk.

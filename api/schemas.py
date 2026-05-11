@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class IngestResponse(BaseModel):
-    """Esquema de respuesta para solicitudes de ingestion."""
+    """Esquema de respuesta para solicitudes de carga e indexacion."""
 
     indexed_documents: int
     indexed_nodes: int
