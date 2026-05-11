@@ -10,6 +10,25 @@ from llama_index.core.schema import Document
 from config import DATA_DIR
 
 
+def file_name_for_citation(value: str | Path | None, fallback: str = "desconocido") -> str:
+    """Devuelve el nombre del archivo.
+
+    Args:
+        value: Nombre de archivo.
+        fallback: Valor si `value` viene vacio.
+
+    Returns:
+        str: Basename apto para citas en texto y en la API.
+    """
+    if value is None:
+        return fallback
+    s = str(value).strip()
+    if not s:
+        return fallback
+    name = Path(s.replace("\\", "/")).name
+    return name if name else fallback
+
+
 def list_pdf_files(data_dir: Path = DATA_DIR) -> list[Path]:
     """Lista archivos PDF en el directorio de datos.
 
@@ -38,7 +57,15 @@ def load_pdf_documents_from_paths(file_paths: list[Path]) -> list[Document]:
         input_files=[str(path) for path in file_paths],
         filename_as_id=True,
     )
-    return reader.load_data()
+    documents = reader.load_data()
+    for doc in documents:
+        meta = dict(doc.metadata or {})
+        raw_name = meta.get("file_name") or meta.get("file_path")
+        if raw_name:
+            meta["file_name"] = file_name_for_citation(raw_name)
+        meta.pop("file_path", None)
+        doc.metadata = meta
+    return documents
 
 
 def load_pdf_documents(data_dir: Path = DATA_DIR) -> list[Document]:

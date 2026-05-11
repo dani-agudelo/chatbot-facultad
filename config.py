@@ -26,6 +26,20 @@ DEFAULT_EMBED_MODEL = "baai/bge-m3"
 
 DEFAULT_EMBED_BATCH_SIZE = 32
 
+DEFAULT_CHAT_SIMILARITY_TOP_K = 5
+_MAX_CHAT_SIMILARITY_TOP_K = 20
+
+
+def get_chat_similarity_top_k() -> int:
+    """Devuelve cuantos nodos similares recuperar en cada mensaje de /chat.
+
+    Returns:
+        int: Valor entre 1 y 20.
+    """
+    load_dotenv()
+    raw = int(os.getenv("CHAT_SIMILARITY_TOP_K", str(DEFAULT_CHAT_SIMILARITY_TOP_K)))
+    return max(1, min(_MAX_CHAT_SIMILARITY_TOP_K, raw))
+
 
 def ensure_runtime_directories() -> None:
     """Crea directorios requeridos por la aplicacion."""

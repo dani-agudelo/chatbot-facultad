@@ -19,12 +19,6 @@ class ChatRequest(BaseModel):
 
     session_id: str = Field(..., min_length=1, description="Identificador de conversacion.")
     message: str = Field(..., min_length=1, description="Pregunta del usuario.")
-    similarity_top_k: int = Field(
-        default=5,
-        ge=1,
-        le=20,
-        description="Numero de nodos top similares a recuperar.",
-    )
 
 
 class SourceItem(BaseModel):

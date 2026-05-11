@@ -13,7 +13,7 @@ from llama_index.core.schema import BaseNode, Document
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
-from carga_documentos.loader import load_pdf_documents
+from carga_documentos.loader import file_name_for_citation, load_pdf_documents
 from carga_documentos.node_parsers import get_sentence_splitter
 from config import DOCSTORE_PATH
 
@@ -115,6 +115,7 @@ def enrich_node_metadata(
     for node in nodes:
         source_document = documents_by_id.get(node.ref_doc_id)
         node.metadata = dict(node.metadata or {})
+        node.metadata.pop("file_path", None)
 
         file_name = (
             node.metadata.get("file_name")
@@ -127,7 +128,7 @@ def enrich_node_metadata(
             or "N/A"
         )
 
-        node.metadata["file_name"] = str(file_name)
+        node.metadata["file_name"] = file_name_for_citation(file_name)
         node.metadata["page_label"] = str(page_label)
 
     return nodes

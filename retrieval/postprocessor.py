@@ -4,20 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from llama_index.core.postprocessor import SimilarityPostprocessor
 from llama_index.core.schema import NodeWithScore
 
-
-def get_similarity_postprocessor(similarity_cutoff: float = 0.55) -> SimilarityPostprocessor:
-    """Crea un postprocessor basado en similitud de nodos.
-
-    Args:
-        similarity_cutoff: Puntuacion minima de similitud para mantener un nodo.
-
-    Returns:
-        SimilarityPostprocessor: Postprocessor configurado.
-    """
-    return SimilarityPostprocessor(similarity_cutoff=similarity_cutoff)
+from carga_documentos.loader import file_name_for_citation
 
 
 def extract_source_metadata(source_nodes: list[NodeWithScore] | None) -> list[dict[str, Any]]:
@@ -35,7 +24,7 @@ def extract_source_metadata(source_nodes: list[NodeWithScore] | None) -> list[di
     grouped_sources: dict[str, dict[str, Any]] = {}
     for source in source_nodes:
         metadata = source.node.metadata or {}
-        file_name = str(metadata.get("file_name", "desconocido.pdf"))
+        file_name = file_name_for_citation(metadata.get("file_name"))
         page_label = str(metadata.get("page_label", "N/A"))
         score = source.score
 
@@ -66,6 +55,5 @@ def extract_source_metadata(source_nodes: list[NodeWithScore] | None) -> list[di
             }
         )
 
-    # Conserva primero los archivos con mayor score para mantener relevancia.
     sources.sort(key=lambda item: item["score"] if item["score"] is not None else float("-inf"), reverse=True)
     return sources

@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.schemas import ChatRequest, ChatResponse, IngestResponse
-from config import CHROMA_COLLECTION, configure_settings
+from config import CHROMA_COLLECTION, configure_settings, get_chat_similarity_top_k
 from generation.query_engine import get_chat_engine
 from carga_documentos.pipeline import load_and_prepare_nodes
 from retrieval.postprocessor import extract_source_metadata
@@ -133,9 +133,10 @@ def chat(request: ChatRequest) -> ChatResponse:
     """
     started = time.perf_counter()
     try:
+        top_k = get_chat_similarity_top_k()
         chat_engine = get_chat_engine(
             session_id=request.session_id,
-            similarity_top_k=request.similarity_top_k,
+            similarity_top_k=top_k,
         )
         response = chat_engine.chat(request.message)
         sources = extract_source_metadata(getattr(response, "source_nodes", None))
@@ -143,7 +144,7 @@ def chat(request: ChatRequest) -> ChatResponse:
         logger.info(
             "event=chat_complete session_id=%s top_k=%s sources=%s latency_seconds=%.3f",
             request.session_id,
-            request.similarity_top_k,
+            top_k,
             len(sources),
             total_seconds,
         )

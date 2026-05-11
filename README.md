@@ -65,6 +65,7 @@ NVIDIA_API_KEY=tu_clave_de_build_nvidia_com
 |----------|-------------|-------------------|
 | `EMBED_MODEL` | Modelo de embeddings en el catálogo NVIDIA | `baai/bge-m3` |
 | `EMBED_BATCH_SIZE` | Textos por request (máx. 259 en la API NVIDIA) | `32` |
+| `CHAT_SIMILARITY_TOP_K` | Cuántos chunks recupera `/chat` por pregunta (1–20); no lo envía el cliente | `5` |
 
 Ejemplo para otro modelo del catálogo:
 
@@ -105,7 +106,7 @@ curl -X POST http://127.0.0.1:8000/chat \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "alumno-1",
-    "message": "¿Qué título otorga la carrera de Ingeniería en Inteligencia Artificial?",
+    "message": "¿Qué título otorga la carrera de Ingeniería en Inteligencia Artificial?"
   }'
 ```
 
@@ -115,7 +116,6 @@ Campos del cuerpo:
 |-------|-------------|-------------|
 | `session_id` | Sí | Identificador de conversación |
 | `message` | Sí | Pregunta del usuario |
-| `similarity_top_k` | No (default 5) | Cuántos chunks recuperar antes de generar |
 
 ---
 
@@ -140,6 +140,7 @@ Campos del cuerpo:
 | `CHUNK_OVERLAP` | `64` | Solape entre chunks |
 | `LLM_MODEL` | `gemini-2.5-flash` | Nombre de modelo para la API de Google GenAI |
 | `DEFAULT_EMBED_MODEL` | `baai/bge-m3` | Multilingüe; configurable con `EMBED_MODEL` |
+| `DEFAULT_CHAT_SIMILARITY_TOP_K` | `5` | Sobrescribible con env `CHAT_SIMILARITY_TOP_K` (1–20) |
 | `CHROMA_COLLECTION` | `faculty_docs` | Nombre de la colección en Chroma |
 
 ---
@@ -149,5 +150,4 @@ Campos del cuerpo:
 Definido en `generation/prompt.py`:
 
 - Responde solo con información **recuperada** de los documentos indexados.
-- Debe citar fuentes, por ejemplo: *Según el archivo X, página Y…*
 - Si la respuesta no está en el contexto recuperado, debe responder exactamente: **"No tengo esa información en los documentos."**

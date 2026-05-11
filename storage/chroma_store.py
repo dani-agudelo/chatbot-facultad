@@ -44,21 +44,3 @@ def get_or_create_collection(collection_name: str = CHROMA_COLLECTION) -> Collec
     """
     client = ChromaClientSingleton.get_client()
     return client.get_or_create_collection(name=collection_name)
-
-
-def reset_collection(collection_name: str = CHROMA_COLLECTION) -> Collection:
-    """Elimina y recrea una coleccion Chroma para un reindexado completo.
-
-    Args:
-        collection_name: Nombre de la coleccion a reiniciar.
-
-    Returns:
-        Collection: Coleccion recien creada.
-    """
-    client = ChromaClientSingleton.get_client()
-    try:
-        client.delete_collection(name=collection_name)
-    except Exception:
-        # La coleccion puede estar ausente en la primera carga al indice.
-        pass
-    return client.get_or_create_collection(name=collection_name)
