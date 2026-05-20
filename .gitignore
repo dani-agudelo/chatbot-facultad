@@ -51,6 +51,8 @@ chroma_db/**
 # ---- Application runtime state ----
 *.sqlite3
 *.db
+logs/*
+!logs/.gitkeep
 *.log
 *.pid
 

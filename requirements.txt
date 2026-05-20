@@ -8,3 +8,4 @@ chromadb
 fastapi
 uvicorn
 python-dotenv
+sentence-transformers>=2.7.0

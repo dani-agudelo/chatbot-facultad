@@ -14,7 +14,7 @@ from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
 from carga_documentos.loader import file_name_for_citation, load_pdf_documents
-from carga_documentos.node_parsers import get_sentence_splitter
+from carga_documentos.node_parsers import get_document_node_parser
 from config import DOCSTORE_PATH
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def ejecutar_pipeline_carga_documentos(
     """
     pipeline = IngestionPipeline(
         transformations=[
-            get_sentence_splitter(),
+            get_document_node_parser(),
             Settings.embed_model,
         ],
         cache=obtener_cache_pipeline_documentos(),

@@ -65,7 +65,13 @@ NVIDIA_API_KEY=tu_clave_de_build_nvidia_com
 |----------|-------------|-------------------|
 | `EMBED_MODEL` | Modelo de embeddings en el catálogo NVIDIA | `baai/bge-m3` |
 | `EMBED_BATCH_SIZE` | Textos por request (máx. 259 en la API NVIDIA) | `32` |
-| `CHAT_SIMILARITY_TOP_K` | Cuántos chunks recupera `/chat` por pregunta (1–20); no lo envía el cliente | `5` |
+| `CHAT_SIMILARITY_TOP_K` | Chunks finales al LLM tras rerank (1–20) | `5` |
+| `RETRIEVAL_CANDIDATES` | Candidatos vectoriales antes de rerank | `10` |
+| `RERANK_ENABLED` | Activa rerank local (`true`/`false`) | `true` |
+| `RERANK_MODEL` | Modelo cross-encoder local (sin coste LLM) | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| `CHAT_MEMORY_TOKEN_LIMIT` | Límite de tokens del historial (condense) | `3500` |
+| `SESSION_TTL_HOURS` | TTL de sesiones en memoria | `24` |
+| `LOG_RETENTION_DAYS` | Días de retención de `logs/log-*.log` | `30` |
 
 Ejemplo para otro modelo del catálogo:
 
@@ -73,7 +79,9 @@ Ejemplo para otro modelo del catálogo:
 EMBED_MODEL=nvidia/nv-embedqa-e5-v5
 ```
 
-> Si se cambia el modelo de embeddings, **borrar la carpeta `chroma_db/`** y volver a ejecutar `/ingest` (las dimensiones del vector cambian).
+> Si se cambia el modelo de embeddings o el parser de chunks (`CHUNK_SIZE` / `StructuredParagraphNodeParser`), **borrar `chroma_db/`** y volver a ejecutar `/ingest`.
+
+Los logs de WARNING/ERROR se guardan en `logs/log-YYYY-MM-DD.log`.
 
 ## Uso
 

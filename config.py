@@ -17,8 +17,8 @@ DOCSTORE_PATH = CHROMA_DIR / "docstore.json"
 
 CHROMA_COLLECTION = "faculty_docs"
 
-CHUNK_SIZE = 512
-CHUNK_OVERLAP = 64
+CHUNK_SIZE = 768
+CHUNK_OVERLAP = 128
 
 LLM_MODEL = "gemini-2.5-flash"
 
@@ -29,65 +29,93 @@ DEFAULT_EMBED_BATCH_SIZE = 32
 DEFAULT_CHAT_SIMILARITY_TOP_K = 5
 _MAX_CHAT_SIMILARITY_TOP_K = 20
 
+DEFAULT_RETRIEVAL_CANDIDATES = 10
+_MAX_RETRIEVAL_CANDIDATES = 30
+
+DEFAULT_RERANK_ENABLED = True
+DEFAULT_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+DEFAULT_CHAT_MEMORY_TOKEN_LIMIT = 3500
+DEFAULT_SESSION_TTL_HOURS = 24
+
+DEFAULT_LOG_RETENTION_DAYS = 30
+
+_CONFIGURED: bool = False
+
+
+def _load_env() -> None:
+    load_dotenv()
+
 
 def get_chat_similarity_top_k() -> int:
-    """Devuelve cuantos nodos similares recuperar en cada mensaje de /chat.
-
-    Returns:
-        int: Valor entre 1 y 20.
-    """
-    load_dotenv()
+    """Nodos finales que recibe el LLM tras rerank."""
+    _load_env()
     raw = int(os.getenv("CHAT_SIMILARITY_TOP_K", str(DEFAULT_CHAT_SIMILARITY_TOP_K)))
     return max(1, min(_MAX_CHAT_SIMILARITY_TOP_K, raw))
+
+
+def get_retrieval_candidates() -> int:
+    """Candidatos vectoriales antes de rerank (>= top_k final)."""
+    _load_env()
+    raw = int(os.getenv("RETRIEVAL_CANDIDATES", str(DEFAULT_RETRIEVAL_CANDIDATES)))
+    final_k = get_chat_similarity_top_k()
+    return max(final_k, min(_MAX_RETRIEVAL_CANDIDATES, raw))
+
+
+def is_rerank_enabled() -> bool:
+    _load_env()
+    raw = os.getenv("RERANK_ENABLED", str(DEFAULT_RERANK_ENABLED)).strip().lower()
+    return raw in {"1", "true", "yes", "on"}
+
+
+def get_rerank_model_name() -> str:
+    _load_env()
+    return os.getenv("RERANK_MODEL", DEFAULT_RERANK_MODEL).strip()
+
+
+def get_chat_memory_token_limit() -> int:
+    _load_env()
+    raw = int(os.getenv("CHAT_MEMORY_TOKEN_LIMIT", str(DEFAULT_CHAT_MEMORY_TOKEN_LIMIT)))
+    return max(1000, min(6000, raw))
+
+
+def get_session_ttl_seconds() -> int:
+    _load_env()
+    hours = float(os.getenv("SESSION_TTL_HOURS", str(DEFAULT_SESSION_TTL_HOURS)))
+    return max(1, int(hours * 3600))
+
+
+def get_log_retention_days() -> int:
+    _load_env()
+    raw = int(os.getenv("LOG_RETENTION_DAYS", str(DEFAULT_LOG_RETENTION_DAYS)))
+    return max(1, raw)
 
 
 def ensure_runtime_directories() -> None:
     """Crea directorios requeridos por la aplicacion."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     CHROMA_DIR.mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "logs").mkdir(parents=True, exist_ok=True)
 
 
 def get_gemini_api_key() -> str:
-    """Devuelve la API key de Gemini desde las variables de entorno.
-
-    Returns:
-        str: La API key de Gemini configurada.
-
-    Raises:
-        ValueError: Si GEMINI_API_KEY falta.
-    """
-    load_dotenv()
+    _load_env()
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
-        raise ValueError("Missing GEMINI_API_KEY environment variable.")
+        raise ValueError("Variable de entorno GEMINI_API_KEY no configurada.")
     return api_key
 
 
 def get_nvidia_api_key() -> str:
-    """Devuelve la API key de NVIDIA desde el entorno.
-
-    Returns:
-        str: La API key de NVIDIA configurada.
-
-    Raises:
-        ValueError: Si NVIDIA_API_KEY falta.
-    """
-    load_dotenv()
+    _load_env()
     api_key = os.getenv("NVIDIA_API_KEY", "").strip()
     if not api_key:
-        raise ValueError("Missing NVIDIA_API_KEY environment variable.")
+        raise ValueError("Variable de entorno NVIDIA_API_KEY no configurada.")
     return api_key
 
 
-_CONFIGURED: bool = False
-
-
 def configure_settings() -> None:
-    """Configura Settings de LlamaIndex una unica vez.
-
-    Raises:
-        ValueError: Si GEMINI_API_KEY o NVIDIA_API_KEY faltan.
-    """
+    """Configura Settings de LlamaIndex una unica vez."""
     global _CONFIGURED
     if _CONFIGURED:
         return
