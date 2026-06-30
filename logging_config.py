@@ -69,6 +69,8 @@ def setup_logging() -> None:
     file_handler.setFormatter(log_format)
     root.addHandler(file_handler)
 
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+
     _purge_expired_log_files()
     logging.getLogger(__name__).info("event=logging_ready log_dir=%s", LOG_DIR)
 

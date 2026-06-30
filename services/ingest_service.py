@@ -10,7 +10,6 @@ from carga_documentos.pipeline import load_and_prepare_nodes
 from config import CHROMA_COLLECTION
 from generation.engine_factory import reset_shared_retriever
 from generation.session_store import clear_all_sessions
-from retrieval.rerank import reset_rerank_postprocessor
 from storage.index_cache import reset_shared_index
 from storage.index_store import get_vector_store
 
@@ -35,7 +34,6 @@ class IngestService:
 
         reset_shared_index()
         reset_shared_retriever()
-        reset_rerank_postprocessor()
         clear_all_sessions()
 
         logger.info(

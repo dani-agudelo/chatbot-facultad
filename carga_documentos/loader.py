@@ -38,7 +38,15 @@ def list_pdf_files(data_dir: Path = DATA_DIR) -> list[Path]:
     Returns:
         list[Path]: Rutas ordenadas de los PDFs encontrados.
     """
-    return sorted(path for path in data_dir.glob("*.pdf") if path.is_file())
+    if not data_dir.is_dir():
+        return []
+
+    seen: dict[str, Path] = {}
+    for path in data_dir.iterdir():
+        if path.is_file() and path.suffix.lower() == ".pdf":
+            seen[path.name.lower()] = path
+
+    return sorted(seen.values(), key=lambda item: item.name.lower())
 
 
 def load_pdf_documents_from_paths(file_paths: list[Path]) -> list[Document]:

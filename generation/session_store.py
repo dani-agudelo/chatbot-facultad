@@ -40,7 +40,7 @@ def _purge_expired_sessions() -> None:
         logger.info("event=session_expired session_id=%s", session_id)
 
 
-def get_chat_engine_for_session(session_id: str) -> CondensePlusContextChatEngine:
+def get_chat_engine(session_id: str) -> CondensePlusContextChatEngine:
     """Obtiene o crea un chat engine cacheado para la sesion."""
     now = time.time()
 

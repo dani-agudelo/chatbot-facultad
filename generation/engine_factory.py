@@ -1,4 +1,4 @@
-"""Fabrica de chat engines con retriever cacheado y rerank opcional."""
+"""Fabrica de chat engines con retriever cacheado."""
 
 from __future__ import annotations
 
@@ -9,9 +9,8 @@ from llama_index.core.base.base_retriever import BaseRetriever
 from llama_index.core.chat_engine import CondensePlusContextChatEngine
 from llama_index.core.memory import ChatMemoryBuffer
 
-from config import get_retrieval_candidates
+from config import get_chat_similarity_top_k
 from generation.prompt import SYSTEM_PROMPT
-from retrieval.rerank import get_rerank_postprocessors
 from retrieval.retriever import build_retriever
 from storage.index_cache import get_shared_index
 
@@ -22,7 +21,7 @@ def get_shared_retriever() -> BaseRetriever:
     index = get_shared_index()
     return build_retriever(
         index=index,
-        similarity_top_k=get_retrieval_candidates(),
+        similarity_top_k=get_chat_similarity_top_k(),
     )
 
 
@@ -32,11 +31,10 @@ def reset_shared_retriever() -> None:
 
 
 def build_chat_engine(memory: ChatMemoryBuffer) -> CondensePlusContextChatEngine:
-    """Construye un motor conversacional con condense, memoria y rerank local."""
+    """Construye un motor conversacional con condense y memoria."""
     return CondensePlusContextChatEngine.from_defaults(
         retriever=get_shared_retriever(),
         llm=Settings.llm,
         memory=memory,
         system_prompt=SYSTEM_PROMPT,
-        node_postprocessors=get_rerank_postprocessors(),
     )

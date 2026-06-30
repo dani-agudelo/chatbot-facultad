@@ -1,21 +1,21 @@
 flowchart TD
     docs[Documentos PDF] --> chunker[Chunking]
-    chunker --> embedDocs[ModeloEmbeddings]
-    embedDocs --> chroma[(ChromaCollection)]
+    chunker --> embedDocs[Embeddings NVIDIA]
+    embedDocs --> chroma[(ChromaDB)]
 
-    userQ[PreguntaUsuario] --> embedQ[ModeloEmbeddings]
+    userQ[PreguntaUsuario] --> condense[CondensePlusContext]
+    userQ --> embedQ[Embedding consulta]
     embedQ --> retriever[BusquedaSimilitudTopK]
     chroma --> retriever
 
     retriever --> context[ChunksRecuperados]
-    context --> llm[LLMGemini]
-    userQ --> llm
+    condense --> llm[LLM gemini o NVIDIA NIM]
+    context --> llm
     llm --> answer[RespuestaConFuentes]
 
+## Lectura del diagrama
 
-
-Lectura del diagrama
-- Embeddings se usan dos veces: para documentos y para pregunta.
-- Con eso haces búsqueda vectorial en Chroma.
-- El LLM no busca, el LLM redacta/razona con el contexto recuperado.
-- Sin embeddings + vector DB, el LLM no tiene recuperación semántica eficiente sobre tu corpus.
+- **Embeddings NVIDIA** se usan para documentos (ingesta) y para la pregunta (chat).
+- Con eso se hace búsqueda vectorial en Chroma (`CHAT_SIMILARITY_TOP_K` chunks).
+- El **LLM** (`LLM_PROVIDER=gemini|nvidia`) condensa el historial y genera la respuesta con el contexto recuperado.
+- El LLM no busca en el corpus; solo redacta con los fragmentos que devuelve el retriever.

@@ -6,8 +6,8 @@ import logging
 import time
 
 from api.schemas import ChatRequest, ChatResponse, SourceItem
-from generation.query_engine import get_chat_engine
-from retrieval.postprocessor import extract_source_metadata
+from generation.session_store import get_chat_engine
+from retrieval.sources import extract_source_metadata
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.core import Settings
 from llama_index.embeddings.nvidia import NVIDIAEmbedding
-from llama_index.llms.google_genai import GoogleGenAI
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
@@ -17,27 +16,17 @@ DOCSTORE_PATH = CHROMA_DIR / "docstore.json"
 
 CHROMA_COLLECTION = "faculty_docs"
 
-CHUNK_SIZE = 768
-CHUNK_OVERLAP = 128
-
-LLM_MODEL = "gemini-2.5-flash"
+CHUNK_SIZE = 512
+CHUNK_OVERLAP = 64
 
 DEFAULT_EMBED_MODEL = "baai/bge-m3"
-
 DEFAULT_EMBED_BATCH_SIZE = 32
 
 DEFAULT_CHAT_SIMILARITY_TOP_K = 5
 _MAX_CHAT_SIMILARITY_TOP_K = 20
 
-DEFAULT_RETRIEVAL_CANDIDATES = 10
-_MAX_RETRIEVAL_CANDIDATES = 30
-
-DEFAULT_RERANK_ENABLED = True
-DEFAULT_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-
 DEFAULT_CHAT_MEMORY_TOKEN_LIMIT = 3500
 DEFAULT_SESSION_TTL_HOURS = 24
-
 DEFAULT_LOG_RETENTION_DAYS = 30
 
 _CONFIGURED: bool = False
@@ -48,29 +37,10 @@ def _load_env() -> None:
 
 
 def get_chat_similarity_top_k() -> int:
-    """Nodos finales que recibe el LLM tras rerank."""
+    """Chunks recuperados por similitud que recibe el LLM (1-20)."""
     _load_env()
     raw = int(os.getenv("CHAT_SIMILARITY_TOP_K", str(DEFAULT_CHAT_SIMILARITY_TOP_K)))
     return max(1, min(_MAX_CHAT_SIMILARITY_TOP_K, raw))
-
-
-def get_retrieval_candidates() -> int:
-    """Candidatos vectoriales antes de rerank (>= top_k final)."""
-    _load_env()
-    raw = int(os.getenv("RETRIEVAL_CANDIDATES", str(DEFAULT_RETRIEVAL_CANDIDATES)))
-    final_k = get_chat_similarity_top_k()
-    return max(final_k, min(_MAX_RETRIEVAL_CANDIDATES, raw))
-
-
-def is_rerank_enabled() -> bool:
-    _load_env()
-    raw = os.getenv("RERANK_ENABLED", str(DEFAULT_RERANK_ENABLED)).strip().lower()
-    return raw in {"1", "true", "yes", "on"}
-
-
-def get_rerank_model_name() -> str:
-    _load_env()
-    return os.getenv("RERANK_MODEL", DEFAULT_RERANK_MODEL).strip()
 
 
 def get_chat_memory_token_limit() -> int:
@@ -115,22 +85,36 @@ def get_nvidia_api_key() -> str:
 
 
 def configure_settings() -> None:
-    """Configura Settings de LlamaIndex una unica vez."""
+    """Configura Settings de LlamaIndex una unica vez (LLM + embeddings)."""
     global _CONFIGURED
     if _CONFIGURED:
         return
 
+    from llm.factory import get_llm_provider
+
     ensure_runtime_directories()
-    gemini_api_key = get_gemini_api_key()
-    nvidia_api_key = get_nvidia_api_key()
+    _load_env()
+
+    llm_provider = get_llm_provider()
+    llm_provider.configure_llm()
+
     embed_model_name = os.getenv("EMBED_MODEL", DEFAULT_EMBED_MODEL).strip()
     embed_batch_size = int(os.getenv("EMBED_BATCH_SIZE", str(DEFAULT_EMBED_BATCH_SIZE)))
 
-    Settings.llm = GoogleGenAI(model=LLM_MODEL, api_key=gemini_api_key)
     Settings.embed_model = NVIDIAEmbedding(
         model=embed_model_name,
-        api_key=nvidia_api_key,
+        api_key=get_nvidia_api_key(),
         embed_batch_size=embed_batch_size,
         truncate="END",
     )
     _CONFIGURED = True
+
+
+def get_active_llm_model() -> str:
+    """Devuelve el nombre del modelo LLM configurado en Settings."""
+    configure_settings()
+    llm = Settings.llm
+    if llm is None:
+        return "unknown"
+    model = getattr(llm, "model", None)
+    return str(model) if model else "unknown"

@@ -12,7 +12,8 @@ from starlette.concurrency import run_in_threadpool
 from api.deps import get_chat_service, get_ingest_service
 from api.exceptions import register_exception_handlers
 from api.schemas import ChatRequest, ChatResponse, IngestResponse
-from config import CHROMA_COLLECTION, configure_settings
+from config import CHROMA_COLLECTION, configure_settings, get_active_llm_model
+from llm.factory import get_llm_provider
 from logging_config import PUBLIC_ERROR_MESSAGE, setup_logging
 from services.chat_service import ChatService
 from services.ingest_service import IngestService
@@ -31,14 +32,19 @@ async def lifespan(_: FastAPI):
     """Inicializa configuracion, logging y dependencias al arranque."""
     configure_settings()
     setup_logging()
-    logger.info("event=startup chroma_collection=%s", CHROMA_COLLECTION)
+    provider = get_llm_provider()
+    logger.info(
+        "event=startup chroma_collection=%s llm_provider=%s",
+        CHROMA_COLLECTION,
+        provider.get_provider_name(),
+    )
     yield
 
 
 app = FastAPI(
     title="Documentos Universitarios RAG API",
     description="Servicio RAG soportado por LlamaIndex y ChromaDB.",
-    version="1.1.0",
+    version="1.2.0",
     lifespan=lifespan,
     docs_url="/swagger",
     redoc_url="/redoc",
@@ -63,7 +69,7 @@ app.add_middleware(
 
 @app.get("/health", tags=["health"])
 async def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "model": get_active_llm_model()}
 
 
 def _ingest_sync(service: IngestService) -> IngestResponse:
