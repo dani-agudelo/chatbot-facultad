@@ -69,18 +69,32 @@ def ensure_runtime_directories() -> None:
 
 
 def get_gemini_api_key() -> str:
+    from admin.runtime_keys import get_db_gemini_api_key
+
+    db_key = get_db_gemini_api_key()
+    if db_key:
+        return db_key
     _load_env()
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
-        raise ValueError("Variable de entorno GEMINI_API_KEY no configurada.")
+        raise ValueError(
+            "GEMINI_API_KEY no configurada (panel admin o variable de entorno)."
+        )
     return api_key
 
 
 def get_nvidia_api_key() -> str:
+    from admin.runtime_keys import get_db_nvidia_api_key
+
+    db_key = get_db_nvidia_api_key()
+    if db_key:
+        return db_key
     _load_env()
     api_key = os.getenv("NVIDIA_API_KEY", "").strip()
     if not api_key:
-        raise ValueError("Variable de entorno NVIDIA_API_KEY no configurada.")
+        raise ValueError(
+            "NVIDIA_API_KEY no configurada (panel admin o variable de entorno)."
+        )
     return api_key
 
 

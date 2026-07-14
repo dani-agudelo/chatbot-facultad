@@ -29,21 +29,17 @@ def file_name_for_citation(value: str | Path | None, fallback: str = "desconocid
     return name if name else fallback
 
 
+_ALLOWED_SUFFIXES = {".pdf", ".txt", ".md"}
+
+
 def list_pdf_files(data_dir: Path = DATA_DIR) -> list[Path]:
-    """Lista archivos PDF en el directorio de datos.
-
-    Args:
-        data_dir: Directorio que contiene los documentos PDF de la universidad.
-
-    Returns:
-        list[Path]: Rutas ordenadas de los PDFs encontrados.
-    """
+    """Lista documentos RAG (.pdf / .txt / .md), sin distinguir mayusculas."""
     if not data_dir.is_dir():
         return []
 
     seen: dict[str, Path] = {}
     for path in data_dir.iterdir():
-        if path.is_file() and path.suffix.lower() == ".pdf":
+        if path.is_file() and path.suffix.lower() in _ALLOWED_SUFFIXES:
             seen[path.name.lower()] = path
 
     return sorted(seen.values(), key=lambda item: item.name.lower())
@@ -92,5 +88,7 @@ def load_pdf_documents(data_dir: Path = DATA_DIR) -> list[Document]:
     documents = load_pdf_documents_from_paths(file_paths)
 
     if not documents:
-        raise ValueError(f"No se encontraron documentos PDF en {data_dir}.")
+        raise ValueError(
+            f"No se encontraron documentos (.pdf / .txt / .md) en {data_dir}."
+        )
     return documents

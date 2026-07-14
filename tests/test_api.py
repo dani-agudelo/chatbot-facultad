@@ -84,7 +84,7 @@ class APITests(unittest.TestCase):
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["model"], "meta/llama-3.1-8b-instruct")
 
-    def test_ingest_without_pdfs_returns_400(self) -> None:
+    def test_public_ingest_removed(self) -> None:
         from api.main import app
 
         mock_provider = MagicMock()
@@ -94,17 +94,11 @@ class APITests(unittest.TestCase):
             patch("api.main.configure_settings"),
             patch("api.main.setup_logging"),
             patch("api.main.get_llm_provider", return_value=mock_provider),
-            patch(
-                "carga_documentos.pipeline.load_pdf_documents",
-                side_effect=ValueError("No se encontraron documentos PDF en /tmp."),
-            ),
         ):
             with TestClient(app) as client:
                 response = client.post("/ingest")
 
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("PDF", response.json()["detail"])
-
+        self.assertEqual(response.status_code, 404)
 
 if __name__ == "__main__":
     unittest.main()
