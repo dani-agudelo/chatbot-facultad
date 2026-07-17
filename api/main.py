@@ -46,8 +46,8 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(
-    title="Documentos Universitarios RAG API",
-    description="Servicio RAG + panel de administracion. La indexacion solo via /admin/reindex.",
+    title="Chatbot RAG Facultad IA e Ingenierías",
+    description="Servicio RAG + panel de administracion.",
     version="1.4.0",
     lifespan=lifespan,
     docs_url="/swagger",

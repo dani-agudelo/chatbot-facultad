@@ -1,0 +1,574 @@
+% ============================================================
+%  DOCUMENTO TÉCNICO — CHATBOT FACULTAD
+%  Arquitectura, código y operación del sistema RAG
+%  Facultad de Inteligencia Artificial e Ingenierías
+%  Universidad de Caldas
+%  Compilar con: pdflatex documento-tecnico.tex  (×2)
+% ============================================================
+
+\documentclass[11pt, a4paper, oneside]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage[
+  top=2.4cm, bottom=2.4cm,
+  left=2.6cm, right=2.4cm,
+  headheight=16pt
+]{geometry}
+
+\usepackage[table, dvipsnames]{xcolor}
+\definecolor{navy}{HTML}{00407D}
+\definecolor{navydark}{HTML}{002D59}
+\definecolor{navysoft}{HTML}{EDF3F9}
+\definecolor{naranja}{HTML}{F27022}
+\definecolor{naranjasoft}{HTML}{FFF4EC}
+\definecolor{grisclaro}{HTML}{F5F7FA}
+\definecolor{gristexto}{HTML}{333333}
+\definecolor{grismuted}{HTML}{667689}
+\definecolor{codebg}{HTML}{F0F4F8}
+
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, calc, shapes.multipart}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tocbibind}
+\usepackage[
+  colorlinks=true,
+  linkcolor=navy,
+  urlcolor=naranja,
+  citecolor=navy,
+  pdftitle={Documento Técnico — Chatbot Facultad},
+  pdfauthor={Facultad de Inteligencia Artificial e Ingenierías — Universidad de Caldas},
+  pdfsubject={Arquitectura y documentación técnica del asistente virtual RAG}
+]{hyperref}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\setcounter{tocdepth}{2}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+% Listings
+\lstset{
+  basicstyle=\ttfamily\small\color{gristexto},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{navy!30},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  aboveskip=8pt,
+  belowskip=8pt,
+  xleftmargin=4pt,
+  xrightmargin=4pt
+}
+
+\newtcolorbox{notabox}{
+  colback=navysoft, colframe=navy,
+  fonttitle=\bfseries\color{navy}, title={Nota técnica},
+  arc=5pt, boxrule=0.8pt, left=8pt, right=8pt, top=5pt, bottom=5pt
+}
+\newtcolorbox{advertenciabox}{
+  colback=naranjasoft, colframe=naranja,
+  fonttitle=\bfseries\color{naranja}, title={Importante},
+  arc=5pt, boxrule=0.8pt, left=8pt, right=8pt, top=5pt, bottom=5pt
+}
+\newtcolorbox{archibox}[1]{
+  colback=grisclaro, colframe=navy,
+  fonttitle=\bfseries\color{white}, title={#1},
+  coltitle=white,
+  attach boxed title to top left={yshift=-2mm, xshift=4mm},
+  boxed title style={colback=naranja, arc=3pt},
+  arc=5pt, left=8pt, right=8pt, top=10pt, bottom=6pt
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{navy}{\nouppercase{\leftmark}}}
+\fancyhead[R]{\small\textcolor{naranja}{\bfseries Documento técnico}}
+\fancyfoot[C]{\small\textcolor{grismuted}{\thepage}}
+\renewcommand{\headrulewidth}{1.2pt}
+\renewcommand{\headrule}{%
+  \hbox to\headwidth{%
+    \color{navy}\leaders\hrule height 1.2pt\hfill
+    \color{naranja}\vrule width 2.2cm height 1.2pt
+  }%
+}
+
+\titleformat{\chapter}[display]
+  {\normalfont}
+  {\textcolor{naranja}{\rule{1.8cm}{3.5pt}}\\[0.35cm]
+   {\large\bfseries\textcolor{navy}{Capítulo \thechapter}}}
+  {0.35cm}
+  {\Huge\bfseries\textcolor{navy}}
+  [\vspace{0.25cm}{\color{naranja}\titlerule[2pt]}\vspace{0.15cm}{\color{navy!40}\titlerule[0.4pt]}]
+\titlespacing*{\chapter}{0pt}{-12pt}{18pt}
+
+\titleformat{\section}
+  {\color{navy}\Large\bfseries}
+  {\thesection}{0.55em}{}
+  [\vspace{-2pt}{\color{naranja}\titlerule[1.2pt]}\vspace{4pt}]
+
+\titleformat{\subsection}
+  {\color{navy}\large\bfseries}
+  {\thesubsection}{0.45em}{}
+
+\newcommand{\ruta}[1]{\texttt{\textcolor{navy}{#1}}}
+\newcommand{\captura}[2]{%
+  \begin{figure}[H]
+    \centering
+    \begin{tcolorbox}[
+      enhanced, colback=navysoft, colframe=navy, boxrule=1pt, arc=8pt,
+      width=0.94\linewidth, height=5.4cm, valign=center, halign=center,
+      shadow={1mm}{-1mm}{0mm}{black!12},
+      borderline west={4pt}{0pt}{naranja}
+    ]
+      {\large\textcolor{navy}{\bfseries[ Espacio para captura / diagrama ]}}\\[0.45cm]
+      {\normalsize\textcolor{gristexto}{#2}}\\[0.55cm]
+      {\footnotesize\texttt{documentation/img/#1.png}}
+    \end{tcolorbox}
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}%
+}
+
+\begin{document}
+
+% ───────────────────────── PORTADA ─────────────────────────
+\begin{titlepage}
+  \newgeometry{margin=0cm}
+  \begin{tikzpicture}[remember picture, overlay]
+    % Fondo navy
+    \fill[navy] (current page.south west) rectangle (current page.north east);
+    % Franja inferior en azul más claro
+    \fill[navy!70!white] ([yshift=0cm]current page.south west)
+      rectangle ([yshift=1.6cm]current page.south east);
+    % Franja diagonal decorativa (azul claro)
+    \fill[white, opacity=0.08]
+      ([yshift=6cm]current page.south west) --
+      ([yshift=9.5cm]current page.south west) --
+      ([yshift=4cm]current page.south east) --
+      ([yshift=0.5cm]current page.south east) -- cycle;
+    % Barra lateral azul
+    \fill[navydark] (current page.north west)
+      rectangle ([xshift=0.55cm]current page.south west);
+  \end{tikzpicture}
+  
+  \color{white}
+  \centering
+  
+  % Logo sin fondo blanco (transparente)
+  \vspace*{1.8cm}
+  \includegraphics[height=2.2cm]{logo-facultad1.png}
+  \vspace{1.0cm}
+  
+  {\Large \bfseries Facultad de Inteligencia Artificial e Ingenierías}\\[0.15cm]
+  {\large Universidad de Caldas}\\[2.0cm]
+  
+  {\color{naranja}\rule{0.5\linewidth}{2pt}}\\[0.6cm]
+  
+  {\fontsize{30}{36}\selectfont\bfseries Documento Técnico}\\[0.5cm]
+  
+  {\LARGE \bfseries Arquitectura y código del
+Asistente Virtual}\\[1cm]
+  
+  {\large Daniela Agudelo Martínez}\\[1cm]
+  {\normalsize Manizales, Colombia}
+  
+  \vfill
+  
+  {\small Versión 1.0 \quad\textcolor{naranja}{|}\quad \today}\\[2.0cm]
+  
+  \restoregeometry
+\end{titlepage}
+
+\color{gristexto}
+\pagecolor{white}
+
+\newpage
+\thispagestyle{empty}
+\section*{Control de versiones}
+\begin{tabularx}{\linewidth}{C{1.6cm} C{2.8cm} L{3.8cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Versión}} &
+  \textcolor{white}{\textbf{Fecha}} &
+  \textcolor{white}{\textbf{Autor}} &
+  \textcolor{white}{\textbf{Descripción}} \\
+  \midrule
+  1.0 & \today & Daniela Agudelo & Documento técnico inicial \\
+  \bottomrule
+\end{tabularx}
+
+\tableofcontents
+\newpage
+\listoffigures
+
+% ============================================================
+\chapter{Introducción}
+
+\section{Objetivo}
+Este documento describe la \textbf{arquitectura}, los \textbf{módulos de código},
+los \textbf{contratos de API}, la \textbf{seguridad} y el \textbf{despliegue}
+del Asistente Virtual, para facilitar
+mantenimiento, auditoría académica y transferencia tecnológica a la Facultad.
+
+\section{Alcance}
+\begin{itemize}
+  \item Backend RAG.
+  \item Panel de administración.
+  \item Plugin WordPress.
+\end{itemize}
+
+\section{Stack tecnológico}
+\begin{tabularx}{\linewidth}{L{3.5cm} L{3.8cm} Y}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Capa}} &
+  \textcolor{white}{\textbf{Tecnología}} &
+  \textcolor{white}{\textbf{Rol}} \\
+  \midrule
+  API RAG & FastAPI, LlamaIndex & Orquestación, chat, admin \\
+  \rowcolor{navysoft}
+  Vectores & ChromaDB & Índice semántico persistente \\
+  LLM & NVIDIA NIM / Gemini & Generación de respuestas \\
+  \rowcolor{navysoft}
+  Embeddings & NVIDIA API & Vectorización de documentos y consultas \\
+  Admin UI & React, Vite, TS & Panel operativo \\
+  \rowcolor{navysoft}
+  Admin DB & PostgreSQL & Usuarios, settings, audit \\
+  Sitio público & WordPress + React & Widget de chat \\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\chapter{Arquitectura del sistema}
+
+\section{Vista lógica}
+El sistema sigue un patrón de tres superficies:
+
+\begin{enumerate}
+  \item \textbf{Cliente público} $\rightarrow$ proxy REST de WordPress
+        $\rightarrow$ \ruta{POST /chat}.
+  \item \textbf{Panel admin} $\rightarrow$ JWT $\rightarrow$ rutas \ruta{/auth/*}
+        y \ruta{/admin/*}.
+  \item \textbf{Motor RAG} (servicios internos): carga, chunking, embeddings,
+        recuperación, generación.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\small\sffamily,
+  box/.style={draw=navy, fill=navysoft, thick, rounded corners=3pt,
+              align=center, minimum width=3.1cm, minimum height=1.05cm},
+  orbox/.style={draw=naranja, fill=naranjasoft, thick, rounded corners=3pt,
+                align=center, minimum width=3.1cm, minimum height=1.05cm},
+  arr/.style={-{Latex}, thick, color=navy}
+]
+  \node[box] (wp) {Widget\\WordPress};
+  \node[box, right=1.1cm of wp] (proxy) {Proxy REST\\WP};
+  \node[orbox, right=1.1cm of proxy] (api) {FastAPI\\API RAG};
+  \node[box, below=1.1cm of api] (chroma) {ChromaDB};
+  \node[box, left=1.1cm of chroma] (llm) {LLM\\NIM / Gemini};
+  \node[orbox, above=1.1cm of api] (admin) {Panel Admin\\React};
+  \node[box, right=1.1cm of api] (pg) {PostgreSQL\\Admin};
+
+  \draw[arr] (wp) -- (proxy);
+  \draw[arr] (proxy) -- (api);
+  \draw[arr] (admin) -- (api);
+  \draw[arr] (api) -- (chroma);
+  \draw[arr] (api) -- (llm);
+  \draw[arr] (api) -- (pg);
+\end{tikzpicture}
+\caption{Arquitectura lógica de alto nivel}
+\label{fig:arq-logica}
+\end{figure}
+
+\section{Flujo RAG}
+\begin{enumerate}
+  \item El usuario envía un mensaje con {session\_id}.
+  \item Se recupera o crea el motor conversacional en memoria.
+  \item El retriever consulta Chroma con embeddings NVIDIA.
+  \item Los fragmentos (\textit{top\_k}) se envían al LLM junto con el historial condensado.
+  \item La API responde con answer y sources[] (sin citas embebidas en el texto).
+\end{enumerate}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{diagrama-flujo.png}
+  \caption{Diagrama detallado del flujo de chat RAG}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\section{Flujo de indexación}
+Solo administradores autenticados:
+
+\begin{enumerate}
+  \item Subida/eliminación de archivos en data/ vía /admin/documents/*.
+  \item Se marca reindex\_required = true.
+  \item POST /admin/reindex ejecuta IngestService.run():
+        carga $\rightarrow$ parseo/chunking $\rightarrow$ \\embeddings $\rightarrow$ upsert Chroma.
+  \item Se invalidan caché de índice, retriever compartido y sesiones de chat.
+\end{enumerate}
+
+% ============================================================
+\chapter{Backend: chatbot-facultad}
+
+\section{Estructura de carpetas}
+\begin{lstlisting}
+chatbot-facultad/
+  api/                 # FastAPI: health, chat, routers admin
+  admin/               # Auth JWT, settings, docs, users
+  alembic/             # Migraciones PostgreSQL
+  llm/                 # Adaptadores Gemini / NVIDIA
+  services/            # ChatService, IngestService
+  generation/          # Engine, prompt, session_store
+  carga_documentos/    # Loader, parsers, pipeline
+  retrieval/           # Retriever y fuentes
+  storage/             # Chroma db
+  tests/               # pytest
+  data/                # Corpus documental
+  chroma_db/           # Persistencia vectorial
+\end{lstlisting}
+
+\section{Punto de entrada}
+\begin{archibox}{api/main.py}
+Registra CORS, lifespan (carga de API keys desde BD + {configure\_settings}),
+routers {/auth} y {/admin}, y endpoints públicos
+{GET /health} y {POST /chat}.
+\end{archibox}
+
+\section{Módulo LLM (adaptadores)}
+\begin{tabularx}{\linewidth}{L{5cm} Y}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Archivo}} &
+  \textcolor{white}{\textbf{Responsabilidad}} \\
+  \midrule
+  \ruta{llm/base.py} & Interfaz del proveedor. \\
+  \rowcolor{navysoft}
+  \ruta{llm/factory.py} & Selección {gemini\textbar nvidia} según entorno/settings. \\
+  \ruta{llm/nvidia\_provider.py} & Configura LlamaIndex NVIDIA NIM. \\
+  \rowcolor{navysoft}
+  \ruta{llm/gemini\_provider.py} & Configura Google GenAI. \\
+  \bottomrule
+\end{tabularx}
+
+\section{Ingesta y almacenamiento}
+\begin{itemize}
+  \item Extensiones:
+  {.pdf}, {.txt}, {.md}.
+  \item Chunking alineado a $\sim$512 tokens con solape configurable.
+  \item Persistencia en colección Chroma {faculty\_docs}.
+\end{itemize}
+
+\section{Generación y sesiones}
+\begin{archibox}{generation/}
+{engine\_factory.py} construye el chat engine; {session\_store.py}
+mantiene \\ engines/memorias en memoria con TTL ({SESSION\_TTL\_HOURS}).
+{prompt.py} define el system prompt restrictivo (sin alucinaciones ni citas
+en el texto).
+\end{archibox}
+
+\section{Configuración}
+Centraliza rutas, defaults de chunking, top\_k, memoria y resolución de API keys:
+
+\begin{enumerate}
+  \item Clave en memoria cargada desde BD (cifrada/descifrada).
+  \item Fallback a variables de entorno {GEMINI\_API\_KEY} / {NVIDIA\_API\_KEY}.
+\end{enumerate}
+
+% ============================================================
+\chapter{Panel de administración (API)}
+
+\section{Autenticación}
+\begin{itemize}
+  \item Login: POST /auth/login} $\rightarrow$ JWT Bearer.
+  \item Caducidad: {JWT\_EXPIRE\_HOURS} (default 12).
+  \item Contraseñas: hash bcrypt.
+  \item Usuarios inactivos no pueden autenticarse.
+\end{itemize}
+
+\section{Endpoints administrativos}
+\begin{tabularx}{\linewidth}{L{3.5cm} L{4.6cm} Y}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Mét.}} &
+  \textcolor{white}{\textbf{Ruta}} &
+  \textcolor{white}{\textbf{Función}} \\
+  \midrule
+  GET & \ruta{/admin/dashboard} & Estado del servicio y reindex. \\
+  \rowcolor{navysoft}
+  GET & \ruta{/admin/branding} & Branding público (sin JWT). \\
+  GET/PUT & \ruta{/admin/settings} & LLM, branding, API keys. \\
+  \rowcolor{navysoft}
+  GET/POST/DEL & \ruta{/admin/documents*} & Biblioteca y uploads. \\
+  POST & \ruta{/admin/reindex} & Indexación autenticada. \\
+  \rowcolor{navysoft}
+  POST & \ruta{/admin/chat/test} & Chat de prueba RAG. \\
+  GET/POST/PATCH & \ruta{/admin/users*} & Gestión de administradores. \\
+  \bottomrule
+\end{tabularx}
+
+\section{Modelo de datos (PostgreSQL)}
+Tablas principales:
+
+\begin{itemize}
+  \item {admin\_users} — administradores.
+  \item {chatbot\_admin\_settings} — fila de configuración (LLM, branding, keys cifradas, flags de reindex).
+  \item {admin\_audit\_logs} — auditoría de acciones.
+\end{itemize}
+% ============================================================
+\chapter{Frontend admin}
+
+\section{Stack}
+React 18 + TypeScript + Vite. Tipografía Manrope. 
+
+\section{Módulos clave}
+\begin{tabularx}{\linewidth}{L{5cm} Y}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Archivo}} &
+  \textcolor{white}{\textbf{Rol}} \\
+  \midrule
+  \ruta{src/api.ts} & Cliente HTTP + JWT en {localStorage}. \\
+  \rowcolor{navysoft}
+  \ruta{src/auth.tsx} & Contexto de autenticación. \\
+  \ruta{src/branding.tsx} & Carga branding y aplica CSS variables. \\
+  \rowcolor{navysoft}
+  \ruta{src/components/Shell.tsx} & Layout y navegación. \\
+  \ruta{src/pages/*.tsx} & Login, Dashboard, Documentos, Settings, Chat, Users. \\
+  \bottomrule
+\end{tabularx}
+
+\section{Páginas y contratos}
+\begin{itemize}
+  \item Login consume branding público.
+  \item Documentos: upload multipart, delete, reindex con confirmación modal.
+  \item Settings: claves (password inputs), modelo, personalización.
+  \item Users: no permite desactivar al único admin activo (regla de UI).
+\end{itemize}
+
+Variable de entorno del front:
+\begin{lstlisting}
+VITE_API_BASE_URL=http://127.0.0.1:8000
+\end{lstlisting}
+
+% ============================================================
+\chapter{Plugin WordPress}
+
+\section{Responsabilidades}
+\begin{itemize}
+  \item Encolar assets del widget React.
+  \item Renderizar el contenedor {\#chatbot-facultad-root}.
+  \item Exponer ajustes en el admin de WP (URL API, título, privacidad, enable/disable).
+  \item Proxificar el chat hacia la API para no exponer la API directamente al navegador
+        en todos los escenarios y aplicar controles propios.
+\end{itemize}
+
+\section{Proxy REST}
+\begin{itemize}
+  \item Namespace: {chatbot-facultad/v1}.
+  \item Nonce propio: chatbot\_facultad\_chat.
+  \item Límite de longitud de mensaje y rate limit por IP/sesión.
+  \item Timeout hacia FastAPI $\sim$90\,s.
+  \item Errores hacia el usuario: mensaje genérico amigable.
+\end{itemize}
+
+% ============================================================
+\chapter{Seguridad}
+
+\section{Controles implementados}
+\begin{itemize}
+  \item Autenticación JWT en operaciones administrativas.
+  \item Contraseñas con bcrypt.
+  \item API keys cifradas en reposo (Fernet).
+  \item Indexación no pública.
+  \item CORS restringido a orígenes configurados.
+  \item Auditoría de acciones admin (login, settings, docs, reindex, users, chat test).
+  \item Prompt que prohíbe inventar información.
+\end{itemize}
+
+% ============================================================
+\chapter{Despliegue y operación}
+
+\section{Requisitos}
+\begin{itemize}
+  \item Python 3.10+, Node 20+, PostgreSQL.
+  \item Claves NVIDIA (obligatoria para embeddings) y Gemini si aplica.
+\end{itemize}
+
+\section{Pasos resumidos}
+\begin{enumerate}
+  \item Crear BD {chatbot\_admin} y configurar {.env}.
+  \item {pip install -r requirements.txt}
+  \item {alembic upgrade head \&\& python -m admin.seed}
+  \item {uvicorn api.main:app --host 0.0.0.0 --port 8000}
+  \item Frontend: {npm install \&\& npm run build} (o {dev}).
+  \item Activar plugin WP y fijar URL base de la API.
+\end{enumerate}
+
+\section{Observabilidad}
+Logs WARNING/ERROR en {logs/log-YYYY-MM-DD.log}. El endpoint
+{GET /health} reporta estado y modelo activo.
+
+% ============================================================
+\chapter{Pruebas}
+
+\section{Automatizadas}
+\begin{lstlisting}
+cd chatbot-facultad
+pytest tests/ -v
+\end{lstlisting}
+
+Cobertura actual (orientativa):
+\begin{itemize}
+  \item Auth (login OK/fail/inactive, rutas protegidas).
+  \item Settings, branding, cifrado de API keys.
+  \item Upload, reindex y chat test (con mocks).
+  \item Health y ausencia de {POST /ingest} público.
+  \item Factory de proveedores LLM.
+\end{itemize}
+
+% ============================================================
+\chapter{Contratos de API (resumen)}
+
+\section{Público}
+\begin{lstlisting}
+GET  /health
+POST /chat
+Body: { "session_id": "...", "message": "..." }
+Resp: { "answer": "...", "sources": [ {file_name, page_label, score?} ] }
+\end{lstlisting}
+
+\section{Admin (JWT)}
+Documentados en detalle en \ruta{ADMIN.md}. Swagger interactivo:
+{/swagger} sobre la API en ejecución.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{tec-04-swagger.png}
+  \caption{Swagger UI con rutas admin}
+  \label{fig:documentos-subida}
+\end{figure}
+\end{document}

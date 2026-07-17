@@ -1,0 +1,762 @@
+% ============================================================
+%  MANUAL DE USUARIO — CHATBOT FACULTAD
+%  Facultad de Inteligencia Artificial e Ingenierías
+%  Universidad de Caldas
+%  Compilar con: pdflatex manual-usuario.tex  (×2)
+% ============================================================
+
+\documentclass[11pt, a4paper, oneside]{report}
+
+% ── Codificación y tipografía ───────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Márgenes ────────────────────────────────────────────────
+\usepackage[
+  top=2.4cm, bottom=2.4cm,
+  left=2.6cm, right=2.4cm,
+  headheight=16pt
+]{geometry}
+
+% ── Colores institucionales ─────────────────────────────────
+\usepackage[table, dvipsnames]{xcolor}
+\definecolor{navy}{HTML}{00407D}
+\definecolor{navydark}{HTML}{002D59}
+\definecolor{navysoft}{HTML}{EDF3F9}
+\definecolor{naranja}{HTML}{F27022}
+\definecolor{naranjasoft}{HTML}{FFF4EC}
+\definecolor{grisclaro}{HTML}{F5F7FA}
+\definecolor{gristexto}{HTML}{333333}
+\definecolor{grismuted}{HTML}{667689}
+\definecolor{okgreen}{HTML}{027A48}
+\definecolor{oksoft}{HTML}{ECFDF3}
+
+% ── Fuente ──────────────────────────────────────────────────
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% ── Gráficos, tablas, cajas ─────────────────────────────────
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{calc, positioning, shapes.geometric}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tocbibind}
+\usepackage{xcolor}
+\usepackage[
+  colorlinks=true,
+  linkcolor=navy,
+  urlcolor=naranja,
+  citecolor=navy,
+  pdftitle={Manual de Usuario — Chatbot Facultad},
+  pdfauthor={Facultad de Inteligencia Artificial e Ingenierías — Universidad de Caldas},
+  pdfsubject={Manual de Usuario del Asistente Virtual Institucional}
+]{hyperref}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+\setcounter{tocdepth}{2}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0pt}
+
+% ── Cajas ───────────────────────────────────────────────────
+\newtcolorbox{notabox}{
+  colback=navysoft, colframe=navy,
+  fonttitle=\bfseries\color{navy},
+  title={Nota},
+  arc=5pt, boxrule=0.8pt,
+  left=8pt, right=8pt, top=5pt, bottom=5pt
+}
+
+\newtcolorbox{advertenciabox}{
+  colback=naranjasoft, colframe=naranja,
+  fonttitle=\bfseries\color{naranja},
+  title={Advertencia},
+  arc=5pt, boxrule=0.8pt,
+  left=8pt, right=8pt, top=5pt, bottom=5pt
+}
+
+\newtcolorbox{tipobox}{
+  colback=oksoft, colframe=okgreen,
+  fonttitle=\bfseries\color{okgreen},
+  title={Recomendación},
+  arc=5pt, boxrule=0.8pt,
+  left=8pt, right=8pt, top=5pt, bottom=5pt
+}
+
+\newtcolorbox{pasobox}[1]{
+  colback=grisclaro, colframe=navy,
+  fonttitle=\bfseries\color{white},
+  title={Paso #1},
+  coltitle=white,
+  attach boxed title to top left={yshift=-2.2mm, xshift=5mm},
+  boxed title style={colback=navy, arc=3pt},
+  arc=5pt, left=8pt, right=8pt, top=12pt, bottom=6pt
+}
+
+% ── Encabezado / pie ────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{navy}{\nouppercase{\leftmark}}}
+\fancyhead[R]{\small\textcolor{naranja}{\textbf{Chatbot Facultad}}}
+\fancyfoot[C]{\small\textcolor{grismuted}{\thepage}}
+\renewcommand{\headrulewidth}{1.2pt}
+\renewcommand{\headrule}{%
+  \hbox to\headwidth{%
+    \color{navy}\leaders\hrule height 1.2pt\hfill
+    \color{naranja}\vrule width 2.2cm height 1.2pt
+  }%
+}
+
+% ── Títulos ─────────────────────────────────────────────────
+\titleformat{\chapter}[display]
+  {\normalfont}
+  {\textcolor{naranja}{\rule{1.8cm}{3.5pt}}\\[0.35cm]
+   {\large\bfseries\textcolor{navy}{Capítulo \thechapter}}}
+  {0.35cm}
+  {\Huge\bfseries\textcolor{navy}}
+  [\vspace{0.25cm}{\color{naranja}\titlerule[2pt]}\vspace{0.15cm}{\color{navy!40}\titlerule[0.4pt]}]
+\titlespacing*{\chapter}{0pt}{-12pt}{18pt}
+
+\titleformat{\section}
+  {\color{navy}\Large\bfseries}
+  {\thesection}{0.55em}{}
+  [\vspace{-2pt}{\color{naranja}\titlerule[1.2pt]}\vspace{4pt}]
+
+\titleformat{\subsection}
+  {\color{navy}\large\bfseries}
+  {\thesubsection}{0.45em}{}
+
+\titleformat{\subsubsection}
+  {\color{gristexto}\normalsize\bfseries}
+  {\thesubsubsection}{0.4em}{}
+
+% ── Helpers UI ──────────────────────────────────────────────
+\newcommand{\menupath}[1]{\textcolor{navy}{\textbf{#1}}}
+\newcommand{\boton}[1]{%
+  \colorbox{naranja}{\small\color{white}\bfseries\ #1\ }%
+}
+\newcommand{\botonnavy}[1]{%
+  \colorbox{navy}{\small\color{white}\bfseries\ #1\ }%
+}
+\newcommand{\campo}[1]{\textit{\textcolor{gristexto}{#1}}}
+\newcommand{\badgeok}[1]{%
+  \colorbox{oksoft}{\small\color{okgreen}\bfseries\ #1\ }%
+}
+\newcommand{\badgeoff}[1]{%
+  \colorbox{grisclaro}{\small\color{grismuted}\bfseries\ #1\ }%
+}
+
+% Placeholder de captura (reemplazar por \includegraphics cuando exista el PNG)
+\newcommand{\captura}[2]{%
+  % #1 = nombre archivo sugerido (sin extensión), #2 = descripción
+  \begin{figure}[H]
+    \centering
+    \begin{tcolorbox}[
+      enhanced,
+      colback=navysoft,
+      colframe=navy,
+      boxrule=1pt,
+      arc=8pt,
+      width=0.94\linewidth,
+      height=6.2cm,
+      valign=center,
+      halign=center,
+      shadow={1mm}{-1mm}{0mm}{black!12},
+      borderline west={4pt}{0pt}{naranja}
+    ]
+      {\large\textcolor{navy}{\bfseries[ Espacio para captura de pantalla ]}}\\[0.55cm]
+      {\normalsize\textcolor{gristexto}{#2}}\\[0.7cm]
+      {\footnotesize\textcolor{grismuted}{Coloque la imagen en:}}\\[0.15cm]
+      {\footnotesize\texttt{documentation/img/#1.png}}\\[0.45cm]
+      {\scriptsize\textcolor{naranja}{%
+        Luego reemplace este bloque por:\\
+        \texttt{\textbackslash includegraphics[width=0.92\textbackslash linewidth]\{img/#1.png\}}
+      }}
+    \end{tcolorbox}
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}%
+}
+
+% ============================================================
+\begin{document}
+
+% ───────────────────────── PORTADA ─────────────────────────
+\begin{titlepage}
+  \newgeometry{margin=0cm}
+  \begin{tikzpicture}[remember picture, overlay]
+    % Fondo navy
+    \fill[navy] (current page.south west) rectangle (current page.north east);
+    % Franja inferior en azul más claro
+    \fill[navy!70!white] ([yshift=0cm]current page.south west)
+      rectangle ([yshift=1.6cm]current page.south east);
+    % Franja diagonal decorativa (azul claro)
+    \fill[white, opacity=0.08]
+      ([yshift=6cm]current page.south west) --
+      ([yshift=9.5cm]current page.south west) --
+      ([yshift=4cm]current page.south east) --
+      ([yshift=0.5cm]current page.south east) -- cycle;
+    % Barra lateral azul
+    \fill[navydark] (current page.north west)
+      rectangle ([xshift=0.55cm]current page.south west);
+  \end{tikzpicture}
+  
+  \color{white}
+  \centering
+  
+  % Logo sin fondo blanco (transparente)
+  \vspace*{1.8cm}
+  \includegraphics[height=2.2cm]{logo-facultad1.png}
+  \vspace{1.0cm}
+  
+  {\Large \bfseries Facultad de Inteligencia Artificial e Ingenierías}\\[0.15cm]
+  {\large Universidad de Caldas}\\[2.0cm]
+  
+  {\color{naranja}\rule{0.5\linewidth}{2pt}}\\[0.6cm]
+  
+  {\fontsize{36}{42}\selectfont\bfseries Asistente Virtual}\\[0.1cm]
+  {\fontsize{36}{42}\selectfont\bfseries Institucional}\\[0.6cm]
+  
+  {\LARGE \bfseries Manual de Usuario}\\[1cm]
+  
+  {\large Daniela Agudelo Martínez}\\[1cm]
+  {\normalsize Manizales, Colombia}
+  
+  \vfill
+  
+  {\small Versión 1.0 \quad\textcolor{naranja}{|}\quad \today}\\[2.0cm]
+  
+  \restoregeometry
+\end{titlepage}
+
+\color{gristexto}
+\pagecolor{white}
+
+% ───────────────── Control de versiones ────────────────────
+\newpage
+\thispagestyle{empty}
+\section*{Control de versiones}
+\vspace{0.3cm}
+\begin{tabularx}{\linewidth}{C{1.6cm} C{2.8cm} L{3.8cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Versión}} &
+  \textcolor{white}{\textbf{Fecha}} &
+  \textcolor{white}{\textbf{Autor}} &
+  \textcolor{white}{\textbf{Descripción}} \\
+  \midrule
+  1.0 & \today & Daniela Agudelo Martínez & Versión inicial del manual de usuario \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{1.2cm}
+\begin{notabox}
+  Este documento está dirigido al personal administrativo y técnico de la Facultad
+  que opera el \textbf{panel de administración} del chatbot
+\end{notabox}
+
+\tableofcontents
+\newpage
+\listoffigures
+
+% ============================================================
+\chapter{Introducción}
+
+\section{Propósito del manual}
+Este manual describe el uso del \textbf{Asistente Virtual Institucional}
+desarrollado para la Facultad de Inteligencia
+Artificial e Ingenierías de la Universidad de Caldas.
+
+El sistema permite:
+\begin{itemize}
+  \item Consultar documentos normativos e institucionales mediante un chat en el sitio web.
+  \item Administrar el corpus documental, el modelo de inteligencia artificial y la apariencia del panel.
+  \item Probar respuestas antes de publicarlas al público.
+\end{itemize}
+
+\section{¿A quién está dirigido?}
+\begin{tabularx}{\linewidth}{L{4.2cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Perfil}} &
+  \textcolor{white}{\textbf{Uso principal}} \\
+  \midrule
+  Administrador del panel & Subir documentos, reindexar, configurar IA, gestionar usuarios. \\
+  \rowcolor{navysoft}
+  Personal de soporte & Orientar el uso del widget y verificar respuestas. \\
+  Estudiantes / visitantes & Usar el chat flotante en el portal web de la Facultad. \\
+  \bottomrule
+\end{tabularx}
+
+\section{Componentes del sistema}
+El producto tiene tres partes visibles:
+
+\begin{enumerate}
+  \item \textbf{Widget de chat} en el sitio WordPress de la Facultad (uso público).
+  \item \textbf{Panel de administración} web (uso restringido a administradores).
+  \item \textbf{API} del motor RAG (backend; no se usa directamente en el día a día).
+\end{enumerate}
+
+\section{Convenciones de este manual}
+\begin{tabularx}{\linewidth}{C{3.2cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Convención}} &
+  \textcolor{white}{\textbf{Significado}} \\
+  \midrule
+  \boton{Botón} & Acción principal (naranja). \\
+  \rowcolor{navysoft}
+  \botonnavy{Botón} & Acción secundaria (azul institucional). \\
+  \campo{Campo} & Campo de formulario. \\
+  \rowcolor{navysoft}
+  \menupath{Menú} & Opción del menú lateral del panel. \\
+  \badgeok{Activo} & Estado positivo o configurado. \\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\chapter{Widget público (sitio web)}
+
+\section{Descripción}
+El widget es un chat flotante que aparece en las páginas del sitio WordPress
+de la Facultad. Permite hacer preguntas sobre documentos institucionales
+indexados (normativa, programas, etc.).
+
+\begin{notabox}
+  El asistente responde \textbf{solo} con información recuperada de los documentos
+  cargados. Si no encuentra la respuesta, indica que no tiene esa información.
+\end{notabox}
+
+\section{Cómo usarlo (estudiante o visitante)}
+
+\begin{pasobox}{1}
+  Abra el sitio web de la Facultad. En la esquina inferior (generalmente derecha)
+  verá el botón flotante del asistente.
+\end{pasobox}
+
+\begin{pasobox}{2}
+  Haga clic en el botón para abrir el panel de chat. La primera vez se mostrará
+  el aviso de privacidad: léalo y acéptelo para continuar.
+\end{pasobox}
+
+\begin{pasobox}{3}
+  Escriba su pregunta en el cuadro de texto y envíela. Espere la respuesta del
+  asistente. Puede continuar con preguntas de seguimiento en la misma sesión.
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{04-1widget-conversacion.png}
+  \caption{Conversación de ejemplo}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{04-2widget-conversacion.png}
+  \caption{Conversación de ejemplo con fuentes citadas}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{tipobox}
+  Formule preguntas concretas, por ejemplo:
+  \textit{«¿Quién es la segunda instancia para cancelar una asignatura?»}
+  en lugar de preguntas demasiado generales.
+\end{tipobox}
+
+\section{Qué puede esperar el usuario}
+\begin{itemize}
+  \item Respuestas basadas en documentos oficiales indexados.
+  \item Listado de fuentes (archivo / página) cuando el sistema las proporciona.
+  \item Mensaje amigable de error si el servicio no está disponible temporalmente.
+\end{itemize}
+
+\begin{advertenciabox}
+  El widget no sustituye trámites oficiales ni asesoría jurídica. Ante dudas
+  críticas, confirme siempre con la dependencia correspondiente de la Facultad.
+\end{advertenciabox}
+
+% ============================================================
+\chapter{Acceso al panel de administración}
+
+\section{Requisitos}
+\begin{itemize}
+  \item Navegador actualizado (Chrome, Firefox, Edge o Safari).
+  \item URL del panel proporcionada por el equipo técnico.
+  \item Correo y contraseña de administrador asignados por la Facultad.
+\end{itemize}
+
+\section{Inicio de sesión}
+
+\begin{pasobox}{1}
+  Abra la URL del panel. Verá la pantalla de acceso con el branding de la Facultad.
+\end{pasobox}
+
+\begin{pasobox}{2}
+  Complete \campo{Correo electrónico} y \campo{Contraseña} (mínimo 8 caracteres).
+\end{pasobox}
+\begin{pasobox}{3}
+  Pulse \boton{Entrar}. Si las credenciales son correctas, accederá al panel.
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{login-administracion.png}
+  \caption{Pantalla de inicio de sesión del panel}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{advertenciabox}
+  Si el usuario está \textbf{inactivo}, el acceso será denegado aunque la
+  contraseña sea correcta. Contacte a otro administrador para reactivarlo.
+\end{advertenciabox}
+
+\section{Navegación general}
+Tras el login, la interfaz se organiza así:
+
+\begin{itemize}
+  \item \textbf{Barra lateral (izquierda):} logo, menú (Inicio, Documentos,
+        Configuración, Chat de prueba, Usuarios) y cierre de sesión.
+  \item \textbf{Área principal:} contenido de la sección activa.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{06-shell-navegacion.png}
+  \caption{Estructura general del panel con menú lateral}
+  \label{fig:documentos-subida}
+\end{figure}
+
+Para salir, use \botonnavy{Cerrar sesión} al pie del menú.
+
+% ============================================================
+\chapter{Inicio}
+
+\section{Descripción}
+La sección \menupath{Inicio} muestra el estado general del asistente:
+
+\begin{itemize}
+  \item Estado del servicio.
+  \item Proveedor de IA activo (NVIDIA o Gemini).
+  \item Modelo LLM en uso.
+  \item Cantidad de documentos en la biblioteca.
+  \item Aviso si hace falta \textbf{reindexar}.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{07-dashboard.png}
+  \caption{Tablero de inicio con métricas del servicio}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{notabox}
+  Si aparece un aviso de reindexación pendiente, vaya a \menupath{Documentos}
+  y ejecute \botonnavy{Reindexar} antes de confiar en el chat público o de prueba.
+\end{notabox}
+
+% ============================================================
+\chapter{Documentos}
+
+\section{Descripción}
+En \menupath{Documentos} gestiona el corpus que alimenta al asistente:
+subida, eliminación y \\
+actualización del índice de búsqueda (reindexación).
+
+\begin{tipobox}
+  Flujo recomendado: \\
+  \textbf{1)} Subir documento \\
+  \textbf{2)} Reindexar \\
+  \textbf{3)} Probar en Chat de prueba.
+\end{tipobox}
+
+\section{Formatos admitidos}
+\begin{itemize}
+  \item PDF (.pdf)
+  \item Texto plano (.txt)
+  \item Markdown (.md)
+  \item Tamaño máximo configurado en el servidor (por defecto 25~MB).
+\end{itemize}
+
+\section{Subir un documento}
+
+\begin{pasobox}{1}
+  Entre a \menupath{Documentos}.
+\end{pasobox}
+\begin{pasobox}{2}
+  Use el área de carga (ícono de subida) o el selector de archivo para elegir
+  el documento.
+\end{pasobox}
+\begin{pasobox}{3}
+  Confirme con \boton{Subir documento} (o el botón equivalente con ícono upload).
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{08-documentos-subida.png}
+  \caption{Sección de carga de archivos}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{advertenciabox}
+  Tras subir o eliminar un archivo, el índice queda desactualizado hasta que
+  pulse \textbf{Reindexar}. El tablero mostrará el aviso correspondiente.
+\end{advertenciabox}
+
+\section{Biblioteca de archivos}
+La tabla lista nombre, tamaño y fecha de actualización. Puede abrir el archivo
+o eliminarlo con el ícono de basurero (se pedirá confirmación).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.92\linewidth]{09-documentos-biblioteca.png}
+  \caption{Biblioteca de documentos con acciones}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\section{Reindexar}
+
+\begin{pasobox}{1}
+  Pulse \botonnavy{Reindexar} (ícono de actualización).
+\end{pasobox}
+\begin{pasobox}{2}
+  Confirme en el diálogo. El proceso puede tardar según el volumen de documentos
+  y el proveedor de embeddings.
+\end{pasobox}
+\begin{pasobox}{3}
+  Al finalizar, verá un mensaje de éxito con el resumen de documentos/fragmentos indexados.
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{10-documentos-reindex.png}
+  \caption{Confirmación de reindexación}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{notabox}
+  Solo los administradores autenticados pueden reindexar. No existe un endpoint
+  público de indexación.
+\end{notabox}
+
+% ============================================================
+\chapter{Configuración}
+
+\section{Descripción}
+\menupath{Configuración} agrupa tres bloques:
+\begin{enumerate}
+  \item Claves API.
+  \item Modelo de IA.
+  \item Personalización visual.
+\end{enumerate}
+
+\section{Claves API}
+Permite registrar las claves de \textbf{Google Gemini} y \textbf{NVIDIA}.
+
+\begin{itemize}
+  \item Se almacenan \textbf{cifradas} en la base de datos.
+  \item Si deja el campo vacío al guardar, \textbf{no se modifica} la clave actual.
+  \item Prioridad: clave en base de datos $\rightarrow$ variable de entorno (.env).
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{12-config-claves.png}
+  \caption{Sección de claves API con información de estado}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{advertenciabox}
+  NVIDIA es necesaria para los \textbf{embeddings} (incluso si el LLM es Gemini).
+  Sin ella no se puede reindexar ni recuperar fragmentos correctamente.
+\end{advertenciabox}
+
+\section{Modelo de IA}
+Campos principales:
+
+\begin{tabularx}{\linewidth}{L{4.2cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Campo}} &
+  \textcolor{white}{\textbf{Descripción}} \\
+  \midrule
+  Proveedor LLM & NVIDIA o Google Gemini. \\
+  \rowcolor{navysoft}
+  Modelo LLM & Identificador del modelo (ej. meta/llama-3.1-8b-instruct). \\
+  Modelo de embeddings & Modelo NVIDIA para vectorizar documentos. \\
+  \rowcolor{navysoft}
+  Fragmentos por consulta & Entre 1 y 20 (cuántos trozos de documento recibe el modelo). \\
+  \bottomrule
+\end{tabularx}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{13-config-modelo.png}
+  \caption{Formulario de proveedor, modelo y fragmentos}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{advertenciabox}
+  Si cambia el \textbf{modelo de embeddings}, el índice queda desactualizado:
+  debe reindexar obligatoriamente.
+\end{advertenciabox}
+
+\section{Personalización}
+
+\begin{itemize}
+  \item \campo{URL del logo} (preferible PNG/SVG horizontal con fondo transparente).
+  \item \campo{Nombre} y \campo{Subtítulo}.
+  \item \campo{Color primario}.
+  \item \campo{Color de acento}.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{14-config-branding.png}
+  \caption{Personalización: logo, nombre y colores}
+  \label{fig:documentos-subida}
+\end{figure}
+
+Pulse \boton{Guardar configuración} al finalizar. Los cambios de branding se
+aplican de inmediato en el panel.
+
+% ============================================================
+\chapter{Chat de prueba}
+
+\section{Descripción}
+\menupath{Chat de prueba} envía preguntas al motor RAG con la configuración
+actual, sin pasar por el widget público. Es el lugar ideal para validar
+documentos recién indexados.
+
+\begin{pasobox}{1}
+  Escriba una pregunta representativa de la normativa o del documento a validar.
+\end{pasobox}
+\begin{pasobox}{2}
+  Pulse el botón de envío (ícono de papel).
+\end{pasobox}
+\begin{pasobox}{3}
+  Revise la respuesta y, si aparecen, las fuentes asociadas.
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{15-chat-prueba.png}
+  \caption{Chat de prueba con pregunta y respuesta}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{tipobox}
+  Ejemplo de pregunta de control:\\
+  \textit{«¿Qué pasa si pierdo más de 3 veces un curso?»}
+\end{tipobox}
+
+
+% ============================================================
+\chapter{Usuarios}
+
+\section{Descripción}
+\menupath{Usuarios} permite crear administradores del panel y activarlos o
+desactivarlos.
+
+\section{Crear un administrador}
+
+\begin{pasobox}{1}
+  Complete \campo{Nombre completo}, \campo{Correo} y \campo{Contraseña} (mín. 8).
+\end{pasobox}
+\begin{pasobox}{2}
+  Pulse \boton{Crear usuario}.
+\end{pasobox}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{16-usuarios-crear.png}
+  \caption{Formulario de nuevo administrador}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\section{Listado y estados}
+Cada fila muestra nombre, correo y estado ( Activo / Inactivo).
+Puede desactivar o activar según corresponda.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\linewidth]{17-usuarios-listado.png}
+  \caption{Listado de administradores}
+  \label{fig:documentos-subida}
+\end{figure}
+
+\begin{advertenciabox}
+  No es posible desactivar al \textbf{único} administrador activo desde la
+  interfaz: el sistema protege el acceso al panel.
+\end{advertenciabox}
+
+% ============================================================
+\chapter{Preguntas frecuentes y solución de \\ problemas}
+
+\section{Preguntas frecuentes}
+
+\subsection*{¿El chat inventa respuestas?}
+No debería: el prompt obliga a basarse solo en documentos recuperados. Si no hay
+evidencia, responde que no tiene la información.
+
+\subsection*{Subí un PDF pero el chat no lo menciona}
+Verifique que ejecutó \textbf{Reindexar} después de subirlo y pruebe en
+\menupath{Chat de prueba}.
+
+\subsection*{Cambié a Gemini y falló}
+Confirme que existe clave Gemini (BD o .env) y que NVIDIA sigue
+disponible para embeddings.
+
+\subsection*{Olvidé la contraseña de admin}
+Otro administrador puede crear un usuario nuevo o actualizar la contraseña
+desde el backend/seed. No hay recuperación automática por correo en el MVP.
+
+\section{Errores comunes}
+\begin{tabularx}{\linewidth}{L{4.5cm} X}
+  \toprule
+  \rowcolor{navy}
+  \textcolor{white}{\textbf{Situación}} &
+  \textcolor{white}{\textbf{Qué hacer}} \\
+  \midrule
+  No inicia sesión & Verifique correo, contraseña y que el usuario esté activo. \\
+  \rowcolor{navysoft}
+  Fallo al subir archivo & Revise formato (PDF/TXT/MD) y tamaño máximo. \\
+  Reindex falla & Revise clave NVIDIA y que haya al menos un documento válido. \\
+  \rowcolor{navysoft}
+  Widget no aparece & En WordPress: widget habilitado y plugin activo. \\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\chapter{Glosario}
+
+\begin{description}[style=nextline, leftmargin=2.2cm, labelindent=0.3cm]
+  \item[\textcolor{navy}{RAG}]
+    \textit{Retrieval-Augmented Generation}: recupera fragmentos de documentos
+    y genera la respuesta con un modelo de lenguaje.
+  \item[\textcolor{navy}{Embeddings}]
+    Representaciones numéricas del texto usadas para búsqueda semántica.
+  \item[\textcolor{navy}{Reindexar}]
+    Volver a procesar los documentos y actualizar el índice vectorial.
+  \item[\textcolor{navy}{LLM}]
+    \textit{Large Language Model}: modelo generativo (NVIDIA NIM o Gemini).
+  \item[\textcolor{navy}{Widget}]
+    Componente de chat flotante en el sitio WordPress.
+  \item[\textcolor{navy}{JWT}]
+    Token de autenticación del panel de administración.
+\end{description}
+
+\end{document}
