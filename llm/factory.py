@@ -9,7 +9,7 @@ from llm.base import LLMProvider
 from llm.gemini_provider import GeminiLLMProvider
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-DEFAULT_NVIDIA_MODEL = "meta/llama-3.1-8b-instruct"
+DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 
 _SUPPORTED_PROVIDERS = ("gemini", "nvidia")
 

@@ -6,6 +6,15 @@ from llama_index.core import Settings
 from llama_index.llms.nvidia import NVIDIA
 
 
+def _nvidia_request_kwargs(model: str) -> dict[str, object]:
+    if model.startswith("deepseek-ai/"):
+        return {
+            "chat_template_kwargs": {"thinking": False},
+            "reasoning_effort": "none",
+        }
+    return {}
+
+
 class NvidiaLLMProvider:
     """Configura NVIDIA NIM como LLM de LlamaIndex."""
 
@@ -27,6 +36,9 @@ class NvidiaLLMProvider:
             "api_key": self._api_key,
             "is_chat_model": True,
         }
+        extra = _nvidia_request_kwargs(self._model)
+        if extra:
+            kwargs["additional_kwargs"] = extra
         if self._base_url:
             kwargs["base_url"] = self._base_url
         Settings.llm = NVIDIA(**kwargs)
